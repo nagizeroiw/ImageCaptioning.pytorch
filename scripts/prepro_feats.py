@@ -89,8 +89,8 @@ def main(params):
         tmp_fc, tmp_att = my_resnet(I, params['att_size'])
 
         if not seen_fc_att_shape:
-            print '> tmp_fc shape:', tmp_fc.shape
-            print '> tmp_att shape:', tmp_att.shape
+            print('> tmp_fc shape:', tmp_fc.shape)
+            print('> tmp_att shape:', tmp_att.shape)
             seen_fc_att_shape = True
 
         # write to pkl
