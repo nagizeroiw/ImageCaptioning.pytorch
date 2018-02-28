@@ -92,7 +92,7 @@ def parse_opt():
                     help='Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/METEOR/ROUGE_L? requires coco-caption code from Github.')
     parser.add_argument('--losses_log_every', type=int, default=25,
                     help='How often do we snapshot losses, for inclusion in the progress dump? (0 = disable)')       
-    parser.add_argument('--cmd_log_every', type=int, default=100,
+    parser.add_argument('--cmd_log_every', type=int, default=20,
                     help='How often do we show iteration detail on cmd screen? (0 = disable)')       
     parser.add_argument('--load_best_score', type=int, default=1,
                     help='Do we load previous best score when resuming training.')       
