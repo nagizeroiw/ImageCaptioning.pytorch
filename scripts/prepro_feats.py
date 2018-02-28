@@ -55,7 +55,7 @@ def main(params):
   net.load_state_dict(torch.load(os.path.join(params['model_root'],params['model']+'.pth')))
   my_resnet = myResnet(net)
   my_resnet.cuda()
-  my_resnet.eval()
+  my_resnet.eval()  # set the model to evaluation mode. Affects Dropout and BatchNorm layers.
 
   imgs = json.load(open(params['input_json'], 'r'))
   imgs = imgs['images']
