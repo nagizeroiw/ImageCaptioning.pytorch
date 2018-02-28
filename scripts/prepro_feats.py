@@ -74,6 +74,15 @@ def main(params):
     seen_fc_att_shape = False
 
     for i, img in enumerate(imgs):
+
+        if i % 1000 == 0:
+            print('- processing %d/%d (%.2f%% done)' % (i, N, i * 100.0 / N))
+
+        # check if dest. file exists
+        if os.path.isfile(os.path.join(dir_fc, str(img['cocoid']))) \
+        and os.path.isfile(os.path.join(dir_att, str(img['cocoid']))):
+            continue
+
         # load the image
         I = skimage.io.imread(os.path.join(params['images_root'], img['filepath'], img['filename']))
         # handle grayscale input images
@@ -85,12 +94,11 @@ def main(params):
         I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, h)
         I = Variable(preprocess(I), volatile=True)
 
-        # should check shape of tmp_fc and tmp_att
         tmp_fc, tmp_att = my_resnet(I, params['att_size'])
 
         if not seen_fc_att_shape:
-            print('> tmp_fc shape:', tmp_fc.shape)
-            print('> tmp_att shape:', tmp_att.shape)
+            print('> tmp_fc shape:', tmp_fc.shape)  # (2048,)
+            print('> tmp_att shape:', tmp_att.shape)  # (14, 14, 2048)
             seen_fc_att_shape = True
 
         # write to pkl
@@ -98,8 +106,6 @@ def main(params):
         np.savez_compressed(os.path.join(dir_att, str(
             img['cocoid'])), feat=tmp_att.data.cpu().float().numpy())
 
-        if i % 1000 == 0:
-            print('- processing %d/%d (%.2f%% done)' % (i, N, i * 100.0 / N))
     print('> wrote ', params['output_dir'])
 
 
