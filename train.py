@@ -100,10 +100,9 @@ def train(opt):
         start = time.time()
         # Load data from train split (0)
         data = loader.get_batch('train')
-        print('Read data:', time.time() - start)
+        # print('Read data:', time.time() - start)
 
         torch.cuda.synchronize()
-        start = time.time()
 
         tmp = [data['fc_feats'], data['att_feats'], data['labels'], data['masks']]
         tmp = [Variable(torch.from_numpy(_), requires_grad=False).cuda() for _ in tmp]
@@ -117,8 +116,10 @@ def train(opt):
         train_loss = loss.data[0]
         torch.cuda.synchronize()
         end = time.time()
-        print("iter {} (epoch {}), train_loss = {:.3f}, time/batch = {:.3f}" \
-            .format(iteration, epoch, train_loss, end - start))
+
+        if (iteration % opt.cmd_log_every == 0):
+            print("- iter {} (epoch {}), train_loss = {:.3f}, time/batch = {:.3f}" \
+                .format(iteration, epoch, train_loss, end - start))
 
         # Update the iteration and epoch
         iteration += 1
@@ -167,7 +168,7 @@ def train(opt):
                     best_flag = True
                 checkpoint_path = os.path.join(opt.checkpoint_path, 'model.pth')
                 torch.save(model.state_dict(), checkpoint_path)
-                print("model saved to {}".format(checkpoint_path))
+                print("> model saved to {}".format(checkpoint_path))
                 optimizer_path = os.path.join(opt.checkpoint_path, 'optimizer.pth')
                 torch.save(optimizer.state_dict(), optimizer_path)
 
@@ -192,7 +193,7 @@ def train(opt):
                 if best_flag:
                     checkpoint_path = os.path.join(opt.checkpoint_path, 'model-best.pth')
                     torch.save(model.state_dict(), checkpoint_path)
-                    print("model saved to {}".format(checkpoint_path))
+                    print("> model saved to {}".format(checkpoint_path))
                     with open(os.path.join(opt.checkpoint_path, 'infos_'+opt.id+'-best.pkl'), 'wb') as f:
                         cPickle.dump(infos, f)
 
