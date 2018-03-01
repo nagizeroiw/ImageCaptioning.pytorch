@@ -66,7 +66,6 @@ def eval_split(model, crit, loader, eval_kwargs={}):
     split = eval_kwargs.get('split', 'val')
     lang_eval = eval_kwargs.get('language_eval', 0)
     dataset = eval_kwargs.get('dataset', 'coco')
-    beam_size = eval_kwargs.get('beam_size', 1)
 
     # Make sure in the evaluation mode
     model.eval()
