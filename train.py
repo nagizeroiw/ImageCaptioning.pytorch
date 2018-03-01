@@ -150,13 +150,17 @@ def train(opt):
             # Write validation result into summary
             if tf is not None:
                 add_summary_value(tf_summary_writer, 'validation loss', val_loss, iteration)
-                for k,v in lang_stats.items():
-                    add_summary_value(tf_summary_writer, k, v, iteration)
-                tf_summary_writer.flush()
-            val_result_history[iteration] = {'loss': val_loss, 'lang_stats': lang_stats, 'predictions': predictions}
+                if lang_stats is not None:
+                    for k,v in lang_stats.items():
+                        add_summary_value(tf_summary_writer, k, v, iteration)
+                    tf_summary_writer.flush()
+            if lang_stats is not None:
+                val_result_history[iteration] = {'loss': val_loss, 'lang_stats': lang_stats, 'predictions': predictions}
+            else:
+                val_result_history[iteration] = {'loss': val_loss, 'predictions': predictions}
 
             # Save model if is improving on validation result
-            if opt.language_eval == 1:
+            if lang_stats is not None:
                 current_score = lang_stats['CIDEr']
             else:
                 current_score = - val_loss
