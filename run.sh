@@ -5,5 +5,6 @@ python train.py --id st --caption_model show_tell \
     --batch_size 64 --learning_rate 2e-4 --learning_rate_decay_start 0 \
     --scheduled_sampling_start 0 \
     --checkpoint_path log_st --save_checkpoint_every 2000 \
-    --val_images_use 2000 --max_epochs 25
-# --start_from log_st
+    --cmd_log_every 100 \
+    --val_images_use 2000 --max_epochs 50 \
+    --start_from log_st
