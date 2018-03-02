@@ -42,14 +42,14 @@ class DataLoader(data.Dataset):
         self.use_att = getattr(opt, 'use_att', True)
 
         # load the json file which contains additional information about the dataset
-        print('DataLoader loading json file: ', opt.input_json)
+        print('> DataLoader loading json file: ', opt.input_json)
         self.info = json.load(open(self.opt.input_json))
         self.ix_to_word = self.info['ix_to_word']
         self.vocab_size = len(self.ix_to_word)
-        print('vocab size is ', self.vocab_size)
+        print('> vocab size is ', self.vocab_size)
         
         # open the hdf5 file
-        print('DataLoader loading h5 file: ', opt.input_fc_dir, opt.input_att_dir, opt.input_label_h5)
+        print('> DataLoader loading h5 file: ', opt.input_fc_dir, opt.input_att_dir, opt.input_label_h5)
         self.h5_label_file = h5py.File(self.opt.input_label_h5, 'r', driver='core')
 
         self.input_fc_dir = self.opt.input_fc_dir
@@ -58,13 +58,13 @@ class DataLoader(data.Dataset):
         # load in the sequence data
         seq_size = self.h5_label_file['labels'].shape
         self.seq_length = seq_size[1]
-        print('max sequence length in data is', self.seq_length)
+        print('> max sequence length in data is', self.seq_length)
         # load the pointers in full to RAM (should be small enough)
         self.label_start_ix = self.h5_label_file['label_start_ix'][:]
         self.label_end_ix = self.h5_label_file['label_end_ix'][:]
 
         self.num_images = self.label_start_ix.shape[0]
-        print('read %d image features' %(self.num_images))
+        print('> read %d image labels' %(self.num_images))
 
         # separate out indexes for each of the provided splits
         self.split_ix = {'train': [], 'val': [], 'test': []}
@@ -79,9 +79,9 @@ class DataLoader(data.Dataset):
             elif opt.train_only == 0: # restval
                 self.split_ix['train'].append(ix)
 
-        print('assigned %d images to split train' %len(self.split_ix['train']))
-        print('assigned %d images to split val' %len(self.split_ix['val']))
-        print('assigned %d images to split test' %len(self.split_ix['test']))
+        print('> assigned %d images to split train' %len(self.split_ix['train']))
+        print('> assigned %d images to split val' %len(self.split_ix['val']))
+        print('> assigned %d images to split test' %len(self.split_ix['test']))
 
         self.iterators = {'train': 0, 'val': 0, 'test': 0}
         
@@ -90,7 +90,7 @@ class DataLoader(data.Dataset):
             self._prefetch_process[split] = BlobFetcher(split, self, split=='train')
             # Terminate the child process when the parent exists
         def cleanup():
-            print('Terminating BlobFetcher')
+            print('> Terminating BlobFetcher process')
             for split in self.iterators.keys():
                 del self._prefetch_process[split]
         import atexit
@@ -116,14 +116,16 @@ class DataLoader(data.Dataset):
             # fetch image
             tmp_fc, tmp_att,\
                 ix, tmp_wrapped = self._prefetch_process[split].get()
+
+            # copy image feature and attention feature for seq_per_img times to match captions.
             fc_batch += [tmp_fc] * seq_per_img
             att_batch += [tmp_att] * seq_per_img
 
             # fetch the sequence labels
-            ix1 = self.label_start_ix[ix] - 1 #label_start_ix starts from 1
+            ix1 = self.label_start_ix[ix] - 1 # label_start_ix starts from 1 ("counter = 1")
             ix2 = self.label_end_ix[ix] - 1
             ncap = ix2 - ix1 + 1 # number of captions available for this image
-            assert ncap > 0, 'an image does not have any label. this can be handled but right now isn\'t'
+            assert ncap > 0, '! an image does not have any label. this can be handled but right now isn\'t'
 
             if ncap < seq_per_img:
                 # we need to subsample (with replacement)

@@ -30,6 +30,9 @@ def add_summary_value(writer, key, value, iteration):
     writer.add_summary(summary, iteration)
 
 def train(opt):
+
+    train_start_t = time.time()
+
     opt.use_att = utils.if_use_att(opt.caption_model)
     loader = DataLoader(opt)
     opt.vocab_size = loader.vocab_size
@@ -82,21 +85,22 @@ def train(opt):
 
     while True:
         if update_lr_flag:
-                # Assign the learning rate
+            # Assign the learning rate
             if epoch > opt.learning_rate_decay_start and opt.learning_rate_decay_start >= 0:
                 frac = (epoch - opt.learning_rate_decay_start) // opt.learning_rate_decay_every
-                decay_factor = opt.learning_rate_decay_rate  ** frac
+                decay_factor = opt.learning_rate_decay_rate ** frac
                 opt.current_lr = opt.learning_rate * decay_factor
                 utils.set_lr(optimizer, opt.current_lr) # set the decayed rate
             else:
                 opt.current_lr = opt.learning_rate
+
             # Assign the scheduled sampling prob
             if epoch > opt.scheduled_sampling_start and opt.scheduled_sampling_start >= 0:
                 frac = (epoch - opt.scheduled_sampling_start) // opt.scheduled_sampling_increase_every
-                opt.ss_prob = min(opt.scheduled_sampling_increase_prob  * frac, opt.scheduled_sampling_max_prob)
+                opt.ss_prob = min(opt.scheduled_sampling_increase_prob * frac, opt.scheduled_sampling_max_prob)
                 model.ss_prob = opt.ss_prob
             update_lr_flag = False
-                
+
         start = time.time()
         # Load data from train split (0)
         data = loader.get_batch('train')
@@ -107,7 +111,7 @@ def train(opt):
         tmp = [data['fc_feats'], data['att_feats'], data['labels'], data['masks']]
         tmp = [Variable(torch.from_numpy(_), requires_grad=False).cuda() for _ in tmp]
         fc_feats, att_feats, labels, masks = tmp
-        
+
         optimizer.zero_grad()
         loss = crit(model(fc_feats, att_feats, labels), labels[:,1:], masks[:,1:])
         loss.backward()
@@ -170,11 +174,14 @@ def train(opt):
                 if best_val_score is None or current_score > best_val_score:
                     best_val_score = current_score
                     best_flag = True
+
                 checkpoint_path = os.path.join(opt.checkpoint_path, 'model.pth')
                 torch.save(model.state_dict(), checkpoint_path)
-                print("> model saved to {}".format(checkpoint_path))
+                print("> model state_dict saved to {}".format(checkpoint_path))
+
                 optimizer_path = os.path.join(opt.checkpoint_path, 'optimizer.pth')
                 torch.save(optimizer.state_dict(), optimizer_path)
+                print("> optimizer state_dict saved to {}".format(optimizer_path))
 
                 # Dump miscalleous informations
                 infos['iter'] = iteration
@@ -189,21 +196,30 @@ def train(opt):
                 histories['loss_history'] = loss_history
                 histories['lr_history'] = lr_history
                 histories['ss_prob_history'] = ss_prob_history
-                with open(os.path.join(opt.checkpoint_path, 'infos_'+opt.id+'.pkl'), 'wb') as f:
+
+                infos_file = os.path.join(opt.checkpoint_path, 'infos_'+opt.id+'.pkl')
+                with open(infos_file, 'wb') as f:
                     cPickle.dump(infos, f)
-                with open(os.path.join(opt.checkpoint_path, 'histories_'+opt.id+'.pkl'), 'wb') as f:
+                print("> training informations saved to {}".format(infos_file))
+
+                ckpt_file = os.path.join(opt.checkpoint_path, 'histories_'+opt.id+'.pkl')
+                with open(ckpt_file, 'wb') as f:
                     cPickle.dump(histories, f)
+                print("> training histories saved to {}".format(ckpt_file))
 
                 if best_flag:
                     checkpoint_path = os.path.join(opt.checkpoint_path, 'model-best.pth')
                     torch.save(model.state_dict(), checkpoint_path)
-                    print("> model saved to {}".format(checkpoint_path))
+                    print("> best-performance model saved to {}".format(checkpoint_path))
                     with open(os.path.join(opt.checkpoint_path, 'infos_'+opt.id+'-best.pkl'), 'wb') as f:
                         cPickle.dump(infos, f)
 
         # Stop if reaching max epochs
         if epoch >= opt.max_epochs and opt.max_epochs != -1:
             break
+
+    total_train_t = time.time() - train_start_t
+    print("> train ended. total time: {.4f}".format(total_train_t))
 
 opt = opts.parse_opt()
 train(opt)
