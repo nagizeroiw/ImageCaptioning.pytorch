@@ -112,12 +112,13 @@ def main(params):
                     I = I[:, :, np.newaxis]
                     I = np.concatenate((I, I, I), axis=2)
                 I = I.astype('float32') / 255.0
+                I = I.transpose([2, 0, 1])
                 # I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, d)
                 # I = Variable(preprocess(I), volatile=True)
                 frames.append(I)
 
             img_b = np.vstack(frames)
-            img_b = torch.from_numpy(I.transpose([2, 0, 1])).cuda()
+            img_b = torch.from_numpy(img_b).cuda()
             img_b = Variable(preprocess(img_b), volatile=True)
             if not seen_fc_att_shape:
                 print('> batched frames (img_b) shape:', img_b.shape)
