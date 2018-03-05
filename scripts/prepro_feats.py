@@ -135,9 +135,9 @@ def main(params):
             seen_fc_att_shape = True
 
         # write to pkl
-        np.save(os.path.join(dir_fc, str(img['cocoid'])), tmp_fc.data.cpu().float().numpy())
+        np.save(os.path.join(dir_fc, str(img['cocoid'])), tmp_fc)
         np.savez_compressed(os.path.join(dir_att, str(
-            img['cocoid'])), feat=tmp_att.data.cpu().float().numpy())
+            img['cocoid'])), feat=tmp_att)
 
     print('> wrote ', params['output_dir'])
 
