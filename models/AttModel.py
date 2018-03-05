@@ -58,47 +58,55 @@ class AttModel(CaptionModel):
                 Variable(weight.new(self.num_layers, bsz, self.rnn_size).zero_()))
 
     def forward(self, fc_feats, att_feats, seq):
+
+        # here, n_batch = batch_size * seq_per_image
+        # fc_feats (n_batch, d_fc)
+        # att_feats (n_batch, n_att, n_att, d_att)
+        # seq (n_batch, max_seqlen)
         batch_size = fc_feats.size(0)
         state = self.init_hidden(batch_size)
+        # state[0|1] (n_layers, n_batch, rnn_size) -> LSTM[h|c]
 
         outputs = []
 
         # embed fc and att feats
-        fc_feats = self.fc_embed(fc_feats)
-        _att_feats = self.att_embed(att_feats.view(-1, self.att_feat_size))
-        att_feats = _att_feats.view(*(att_feats.size()[:-1] + (self.rnn_size,)))
+        fc_feats = self.fc_embed(fc_feats)  # (n_batch, rnn_size)
+        _att_feats = self.att_embed(att_feats.view(-1, self.att_feat_size))  # (n_total_att = n_batch * n_att * n_att, rnn_size)
+        att_feats = _att_feats.view(*(att_feats.size()[:-1] + (self.rnn_size,)))  # (n_batch, n_att, n_att, rnn_size)
 
         # Project the attention feats first to reduce memory and computation comsumptions.
-        p_att_feats = self.ctx2att(att_feats.view(-1, self.rnn_size))
-        p_att_feats = p_att_feats.view(*(att_feats.size()[:-1] + (self.att_hid_size,)))
+        p_att_feats = self.ctx2att(att_feats.view(-1, self.rnn_size))  # (n_total_att, att_hid_size)
+        p_att_feats = p_att_feats.view(*(att_feats.size()[:-1] + (self.att_hid_size,)))  # (n_batch, n_att, n_att, att_hid_size)
 
         for i in range(seq.size(1) - 1):
-            if self.training and i >= 1 and self.ss_prob > 0.0: # otherwiste no need to sample
-                sample_prob = fc_feats.data.new(batch_size).uniform_(0, 1)
-                sample_mask = sample_prob < self.ss_prob
+            if self.training and i >= 1 and self.ss_prob > 0.0: # otherwise no need to sample
+                sample_prob = fc_feats.data.new(batch_size).uniform_(0, 1)  # (batch_size,)
+                sample_mask = sample_prob < self.ss_prob  # (batch_size,)
                 if sample_mask.sum() == 0:
-                    it = seq[:, i].clone()
+                    it = seq[:, i].clone()  # (input of current time-step)
                 else:
                     sample_ind = sample_mask.nonzero().view(-1)
                     it = seq[:, i].data.clone()
                     #prob_prev = torch.exp(outputs[-1].data.index_select(0, sample_ind)) # fetch prev distribution: shape Nx(M+1)
                     #it.index_copy_(0, sample_ind, torch.multinomial(prob_prev, 1).view(-1))
                     prob_prev = torch.exp(outputs[-1].data) # fetch prev distribution: shape Nx(M+1)
+
+                    # (use model output instead of teacher forcing)
                     it.index_copy_(0, sample_ind, torch.multinomial(prob_prev, 1).view(-1).index_select(0, sample_ind))
-                    it = Variable(it, requires_grad=False)
+                    it = Variable(it, requires_grad=False)  # (batch_size, 1)
             else:
-                it = seq[:, i].clone()          
+                it = seq[:, i].clone()
             # break if all the sequences end
             if i >= 1 and seq[:, i].data.sum() == 0:
                 break
 
-            xt = self.embed(it)
+            xt = self.embed(it)  # (batch_size, input_encoding_size) -> input of this time-step
 
             output, state = self.core(xt, fc_feats, att_feats, p_att_feats, state)
-            output = F.log_softmax(self.logit(output))
+            output = F.log_softmax(self.logit(output))  # (batch_size, vocab_size)
             outputs.append(output)
 
-        return torch.cat([_.unsqueeze(1) for _ in outputs], 1)
+        return torch.cat([_.unsqueeze(1) for _ in outputs], 1)  # (batch_size, max_seq_len, vocab_size)
 
     def get_logprobs_state(self, it, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, state):
         # 'it' is Variable contraining a word index
@@ -374,19 +382,19 @@ class TopDownCore(nn.Module):
         self.attention = Attention(opt)
 
     def forward(self, xt, fc_feats, att_feats, p_att_feats, state):
-        prev_h = state[0][-1]
-        att_lstm_input = torch.cat([prev_h, fc_feats, xt], 1)
+        prev_h = state[0][-1]  # (batch_size, rnn_size)
+        att_lstm_input = torch.cat([prev_h, fc_feats, xt], 1)  # (batch_size, rnn_size * 2 + input_encoding_size)
 
-        h_att, c_att = self.att_lstm(att_lstm_input, (state[0][0], state[1][0]))
+        h_att, c_att = self.att_lstm(att_lstm_input, (state[0][0], state[1][0]))  # both (batch_size, rnn_size) ?
 
-        att = self.attention(h_att, att_feats, p_att_feats)
+        att = self.attention(h_att, att_feats, p_att_feats)  # (batch_size, att_feat_size(=rnn_size))
 
-        lang_lstm_input = torch.cat([att, h_att], 1)
+        lang_lstm_input = torch.cat([att, h_att], 1)  # (batch_size, 2 * rnn_size)
         # lang_lstm_input = torch.cat([att, F.dropout(h_att, self.drop_prob_lm, self.training)], 1) ?????
 
-        h_lang, c_lang = self.lang_lstm(lang_lstm_input, (state[0][1], state[1][1]))
+        h_lang, c_lang = self.lang_lstm(lang_lstm_input, (state[0][1], state[1][1]))  # (batch_size, rnn_size)
 
-        output = F.dropout(h_lang, self.drop_prob_lm, self.training)
+        output = F.dropout(h_lang, self.drop_prob_lm, self.training)  # (batch_size, rnn_size)
         state = (torch.stack([h_att, h_lang]), torch.stack([c_att, c_lang]))
 
         return output, state
@@ -402,8 +410,8 @@ class Attention(nn.Module):
 
     def forward(self, h, att_feats, p_att_feats):
         # The p_att_feats here is already projected
-        att_size = att_feats.numel() // att_feats.size(0) // self.rnn_size
-        att = p_att_feats.view(-1, att_size, self.att_hid_size)
+        att_size = att_feats.numel() // att_feats.size(0) // self.rnn_size  # att_size = 14*14
+        att = p_att_feats.view(-1, att_size, self.att_hid_size)  # (batch_size, att_size, att_hid_size)
         
         att_h = self.h2att(h)                        # batch * att_hid_size
         att_h = att_h.unsqueeze(1).expand_as(att)            # batch * att_size * att_hid_size
