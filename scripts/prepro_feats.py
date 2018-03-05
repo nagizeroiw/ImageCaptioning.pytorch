@@ -105,7 +105,7 @@ def main(params):
         elif 'msvd' in params['input_json']:
 
             # load images
-            frames = []
+            frames = np.zeros((26, 2048))
             for frame_idx in range(26):
                 image_name = os.path.join(params['images_root'], '%d-%d.png' % (img['cocoid'], frame_idx))
                 I = skimage.io.imread(image_name)
@@ -118,7 +118,7 @@ def main(params):
                 tmp_fc = my_resnet(I, 0)  # do not get attention fields. get shape (2048,)
                 if not seen_fc_att_shape:
                     print('> tmp_fc for one frame shape:', tmp_fc.shape)
-                frames.append(tmp_fc)
+                frames[frame_idx, :] = tmp_fc[:]
 
             fcs = np.stack(frames)
             if not seen_fc_att_shape:
