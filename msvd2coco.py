@@ -49,6 +49,7 @@ def read():
     # will be dumped as coco_reference.json
     # only contains TEST set captions.
     annotations = []
+    igs = []
 
     sentence_id = 0
 
@@ -67,6 +68,10 @@ def read():
                 anno_dict['image_id'] = vid
                 annotations.append(anno_dict)
 
+                img_dict = {}
+                img_dict['id'] = vid
+                igs.append(img_dict)
+
             images[vid]['sentences'].append(sent_dict)
             images[vid]['sentids'].append(sentence_id)
             sentence_id += 1
@@ -81,6 +86,10 @@ def read():
 
     coco_ref_msvd = {}
     coco_ref_msvd['annotations'] = annotations
+    coco_ref_msvd['images'] = igs
+    coco_ref_msvd['type'] = 'captions'
+    coco_ref_msvd['info'] = 'msvd'
+    coco_ref_msvd['licenses'] = 'Ke Su'
     with open('data/msvd_dataset/coco_ref_msvd.json', 'w') as file:
         json.dump(coco_ref_msvd, file)
     print('> wrote coco_ref_msvd.json')
