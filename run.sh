@@ -6,5 +6,5 @@ python train.py --id st --caption_model topdown \
     --batch_size 64 --learning_rate 2e-4 --learning_rate_decay_start 0 \
     --scheduled_sampling_start 0 \
     --checkpoint_path log_$ID --save_checkpoint_every 2000 \
-    --cmd_log_every 100 \
-    --val_images_use 670 --max_epochs 25
+    --cmd_log_every 50 \
+    --val_images_use 670 --max_epochs 100
