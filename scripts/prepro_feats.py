@@ -128,7 +128,7 @@ def main(params):
             if not seen_fc_att_shape:
                 print('> tmp_fc for the video shape:', tmp_fc.shape)
 
-            tmp_att = fcs.squeeze(0)  # (1, 26, 2048)
+            tmp_att = fcs.unsqueeze(0)  # (1, 26, 2048)
             if not seen_fc_att_shape:
                 print('> tmp_att for the video shape:', tmp_att.shape)
 
