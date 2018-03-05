@@ -77,12 +77,14 @@ def read():
     with open('data/msvd_dataset/dataset_msvd.json', 'w') as file:
         json.dump(dataset_msvd, file)
     print('> wrote dataset_msvd.json')
+    print('>', dataset_msvd['images'][0])
 
     coco_ref_msvd = {}
     coco_ref_msvd['annotations'] = annotations
-    with open('data/msvd_dataset/coco_ref_msvd.json') as file:
+    with open('data/msvd_dataset/coco_ref_msvd.json', 'w') as file:
         json.dump(coco_ref_msvd, file)
     print('> wrote coco_ref_msvd.json')
+    print('>', coco_ref_msvd['annotations'][:4])
 
 if __name__ == '__main__':
     read()
