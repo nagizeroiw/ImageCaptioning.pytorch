@@ -83,22 +83,55 @@ def main(params):
         and os.path.isfile(os.path.join(dir_att, str(img['cocoid']))):
             continue
 
-        # load the image
-        I = skimage.io.imread(os.path.join(params['images_root'], img['filepath'], img['filename']))
-        # handle grayscale input images
-        if len(I.shape) == 2:
-            I = I[:, :, np.newaxis]
-            I = np.concatenate((I, I, I), axis=2)
 
-        I = I.astype('float32') / 255.0
-        I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, h)
-        I = Variable(preprocess(I), volatile=True)
+        if 'coco' in params['input_json']:
+            # load the image
+            I = skimage.io.imread(os.path.join(params['images_root'], img['filepath'], img['filename']))
+            # handle grayscale input images
+            if len(I.shape) == 2:
+                I = I[:, :, np.newaxis]
+                I = np.concatenate((I, I, I), axis=2)
 
-        tmp_fc, tmp_att = my_resnet(I, params['att_size'])
+            I = I.astype('float32') / 255.0
+            I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, h)
+            I = Variable(preprocess(I), volatile=True)
 
-        if not seen_fc_att_shape:
-            print('> tmp_fc shape:', tmp_fc.shape)  # (2048,)
-            print('> tmp_att shape:', tmp_att.shape)  # (14, 14, 2048)
+            tmp_fc, tmp_att = my_resnet(I, params['att_size'])
+
+            if not seen_fc_att_shape:
+                print('> tmp_fc shape:', tmp_fc.shape)  # (2048,)
+                print('> tmp_att shape:', tmp_att.shape)  # (14, 14, 2048)
+                seen_fc_att_shape = True
+        elif 'msvd' in params['input_json']:
+
+            # load images
+            frames = []
+            for frame_idx in range(26):
+                image_name = os.path.join(params['images_root'], '%d-%d.png' % (img['cocoid'], frame_idx))
+                I = skimage.io.imread(image_name)
+                if len(I.shape) == 2:
+                    I = I[:, :, np.newaxis]
+                    I = np.concatenate((I, I, I), axis=2)
+                I = I.astype('float32') / 255.0
+                I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()
+                I = Variable(preprocess(I), volatile=True)
+                tmp_fc = my_resnet(I, 0)  # do not get attention fields. get shape (2048,)
+                if not seen_fc_att_shape:
+                    print('> tmp_fc for one frame shape:', tmp_fc.shape)
+                frames.append(tmp_fc)
+
+            fcs = np.stack(frames)
+            if not seen_fc_att_shape:
+                print('> fcs shape:', fcs.shape)
+
+            tmp_fc = np.average(fcs, axis=0)  # (2048,)
+            if not seen_fc_att_shape:
+                print('> tmp_fc for the video shape:', tmp_fc.shape)
+
+            tmp_att = fcs.squeeze(0)  # (1, 26, 2048)
+            if not seen_fc_att_shape:
+                print('> tmp_att for the video shape:', tmp_att.shape)
+
             seen_fc_att_shape = True
 
         # write to pkl
