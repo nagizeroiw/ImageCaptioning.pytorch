@@ -52,4 +52,4 @@ class myResnet(nn.Module):
             att = F.adaptive_avg_pool2d(x,[att_size,att_size]).squeeze().permute(1, 2, 0)
             return fc, att
         else:
-            return fc  # (26, 2048)?
+            return fc, fc.mean(0)  # (26, 2048), (2048,)

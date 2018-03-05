@@ -124,24 +124,17 @@ def main(params):
             if not seen_fc_att_shape:
                 print('> batched frames (img_b) shape:', img_b.shape)
 
-            fcs = my_resnet(img_b, 0)
-            if not seen_fc_att_shape:
-                print('> fcs shape:', fcs.shape)
-
-            tmp_fc = np.average(fcs, axis=0)  # (2048,)
+            tmp_att, tmp_fc = my_resnet(img_b, 0)
             if not seen_fc_att_shape:
                 print('> tmp_fc for the video shape:', tmp_fc.shape)
-
-            tmp_att = np.expand_dims(fcs, axis=0)  # (1, 26, 2048)
-            if not seen_fc_att_shape:
                 print('> tmp_att for the video shape:', tmp_att.shape)
 
             seen_fc_att_shape = True
 
         # write to pkl
-        np.save(os.path.join(dir_fc, str(img['cocoid'])), tmp_fc)
+        np.save(os.path.join(dir_fc, str(img['cocoid'])), tmp_fc.data.cpu().float().numpy())
         np.savez_compressed(os.path.join(dir_att, str(
-            img['cocoid'])), feat=tmp_att)
+            img['cocoid'])), feat=tmp_att.data.cpu().float().numpy())
 
     print('> wrote ', params['output_dir'])
 
