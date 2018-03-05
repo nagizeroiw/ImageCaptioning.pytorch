@@ -113,6 +113,7 @@ def main(params):
                     I = np.concatenate((I, I, I), axis=2)
                 I = I.astype('float32') / 255.0
                 I = I.transpose([2, 0, 1])
+                I = np.expand_dims(I, axis=0)
                 # I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, d)
                 # I = Variable(preprocess(I), volatile=True)
                 frames.append(I)
