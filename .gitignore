@@ -5,3 +5,4 @@ coco-caption/*
 eval_*
 
 *.pyc
+*.pkl
