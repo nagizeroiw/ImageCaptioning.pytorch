@@ -63,7 +63,7 @@ def parse_opt():
     parser.add_argument('--drop_prob_lm', type=float, default=0.5,
                     help='strength of dropout in the Language Model RNN')
 
-    parser.add_argument('--seq_per_img', type=int, default=5,
+    parser.add_argument('--seq_per_img', type=int, default=40,
                     help='number of captions to sample for each image during training. Done for efficiency since CNN forward pass is expensive. E.g. coco has 5 sents/image')
 
     parser.add_argument('--beam_size', type=int, default=1,
