@@ -7,4 +7,4 @@ python train.py --id st --caption_model topdown \
     --scheduled_sampling_start 0 \
     --checkpoint_path log_$ID --save_checkpoint_every 2000 \
     --cmd_log_every 100 \
-    --val_images_use 2000 --max_epochs 25
+    --val_images_use 670 --max_epochs 25
