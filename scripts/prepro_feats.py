@@ -120,7 +120,7 @@ def main(params):
                     print('> tmp_fc for one frame shape:', tmp_fc.shape)
                 frames[frame_idx, :] = tmp_fc[:]
 
-            fcs = np.stack(frames)
+            fcs = frames
             if not seen_fc_att_shape:
                 print('> fcs shape:', fcs.shape)
 
