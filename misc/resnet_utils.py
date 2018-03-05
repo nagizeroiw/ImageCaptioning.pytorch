@@ -29,7 +29,7 @@ class myResnet(nn.Module):
             return fc
 
 
-class myResnet(nn.Module):
+class myResnetV(nn.Module):
     def __init__(self, resnet):
         super(myResnet, self).__init__()
         self.resnet = resnet
@@ -52,4 +52,4 @@ class myResnet(nn.Module):
             att = F.adaptive_avg_pool2d(x,[att_size,att_size]).squeeze().permute(1, 2, 0)
             return fc, att
         else:
-            return fc, fc.mean(0)  # (26, 2048), (2048,)
+            return fc.unsqueeze(0), fc.mean(0)  # (1, 26, 2048), (2048,)
