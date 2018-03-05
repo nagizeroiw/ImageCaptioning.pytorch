@@ -146,7 +146,7 @@ def train(opt):
         # make evaluation on validation set, and save model
         if (iteration % opt.save_checkpoint_every == 0):
             # eval model
-            eval_kwargs = {'split': 'val',
+            eval_kwargs = {'split': 'test',
                             'dataset': opt.input_json}
             eval_kwargs.update(vars(opt))
             val_loss, predictions, lang_stats = eval_utils.eval_split(model, crit, loader, eval_kwargs)
