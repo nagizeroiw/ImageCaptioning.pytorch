@@ -149,7 +149,7 @@ class DataLoader(data.Dataset):
             info_dict = {}
             info_dict['ix'] = ix
             info_dict['id'] = self.info['images'][ix]['id']
-            info_dict['file_path'] = self.info['images'][ix]['file_path']
+            # info_dict['file_path'] = self.info['images'][ix]['file_path']
             infos.append(info_dict)
             #print(i, time.time() - t_start)
 
