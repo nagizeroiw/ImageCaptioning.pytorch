@@ -31,7 +31,7 @@ class myResnet(nn.Module):
 
 class myResnetV(nn.Module):
     def __init__(self, resnet):
-        super(myResnet, self).__init__()
+        super(myResnetV, self).__init__()
         self.resnet = resnet
 
     def forward(self, img, att_size=14):
