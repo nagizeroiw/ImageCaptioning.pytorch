@@ -7,7 +7,7 @@ import json
 import random
 
 def read():
-    with open('vid2name.pkl') as file:
+    with open('data/msvd_raw/vid2name.pkl') as file:
         vid2name = cPickle.load(file)
     # vid2name: int -> str
     n_video = len(vid2name.keys())
@@ -31,7 +31,7 @@ def read():
 
     # should construct cap as a dictionary:
     # cap['vid0'] -> list of {'cap_id', 'tokenized'(train), 'caption'(eval), 'image_id'}
-    with open('caps.pkl') as file:
+    with open('data/msvd_raw/cap.pkl') as file:
         caps = cPickle.load(file)
 
     # will be dumped as dataset.json
@@ -74,13 +74,15 @@ def read():
     # dump dataset_msvd.json and coco_reference_msvd.json
     dataset_msvd = {}
     dataset_msvd['images'] = images
-    with open('dataset_msvd.json', 'w') as file:
+    with open('data/msvd_dataset/dataset_msvd.json', 'w') as file:
         json.dump(dataset_msvd, file)
     print('> wrote dataset_msvd.json')
 
     coco_ref_msvd = {}
     coco_ref_msvd['annotations'] = annotations
-    with open('coco_ref_msvd.json') as file:
+    with open('data/msvd_dataset/coco_ref_msvd.json') as file:
         json.dump(coco_ref_msvd, file)
     print('> wrote coco_ref_msvd.json')
 
+if __name__ == '__main__':
+    read()
