@@ -75,7 +75,7 @@ def main(params):
 
     for i, img in enumerate(imgs):
 
-        if i % 1000 == 0:
+        if i % (len(imgs) // 100) == 0:
             print('- processing %d/%d (%.2f%% done)' % (i, N, i * 100.0 / N))
 
         # check if dest. file exists
@@ -105,7 +105,7 @@ def main(params):
         elif 'msvd' in params['input_json']:
 
             # load images
-            frames = np.zeros((26, 2048))
+            frames = []
             for frame_idx in range(26):
                 image_name = os.path.join(params['images_root'], '%d-%d.png' % (img['cocoid'], frame_idx))
                 I = skimage.io.imread(image_name)
@@ -113,14 +113,20 @@ def main(params):
                     I = I[:, :, np.newaxis]
                     I = np.concatenate((I, I, I), axis=2)
                 I = I.astype('float32') / 255.0
-                I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()
+                I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, d)
                 I = Variable(preprocess(I), volatile=True)
-                tmp_fc = my_resnet(I, 0)  # do not get attention fields. get shape (2048,)
-                if not seen_fc_att_shape:
-                    print('> tmp_fc for one frame shape:', tmp_fc.shape)
-                frames[frame_idx, :] = tmp_fc[:]
+                frames.append(I)
 
-            fcs = frames
+            img_b = np.vstack(frames)
+            if not seen_fc_att_shape:
+                print('> batched frames (img_b) shape:', img_b.shape)
+
+            fcs = my_resnet(img_b, 0)
+            # tmp_fc = my_resnet(I, 0)  # do not get attention fields. get shape (2048,)
+            # if not seen_fc_att_shape:
+            #     print('> tmp_fc for one frame shape:', tmp_fc.shape)
+            # frames[frame_idx, :] = tmp_fc[:]
+
             if not seen_fc_att_shape:
                 print('> fcs shape:', fcs.shape)
 
