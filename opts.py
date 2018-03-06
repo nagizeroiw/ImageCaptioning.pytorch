@@ -74,10 +74,10 @@ def parse_opt():
     parser.add_argument('--optim', type=str, default='adam',
                     help='what update to use? rmsprop|sgd|sgdmom|adagrad|adam')
 
-    parser.add_argument('--learning_rate', type=float, default=4e-4,
+    parser.add_argument('--learning_rate', type=float, default=2e-4,
                     help='learning rate')
 
-    parser.add_argument('--learning_rate_decay_start', type=int, default=-1, 
+    parser.add_argument('--learning_rate_decay_start', type=int, default=0, 
                     help='at what iteration to start decaying learning rate? (-1 = dont) (in epoch)')
 
     parser.add_argument('--learning_rate_decay_every', type=int, default=3, 
