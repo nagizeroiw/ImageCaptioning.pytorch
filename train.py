@@ -219,7 +219,7 @@ def train(opt):
             break
 
     total_train_t = time.time() - train_start_t
-    print("> train ended. total time: {.4f}".format(total_train_t))
+    print("> train ended. total time: {:.4f}".format(total_train_t))
 
 opt = opts.parse_opt()
 train(opt)
