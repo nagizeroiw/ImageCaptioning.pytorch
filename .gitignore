@@ -5,5 +5,7 @@ coco-caption/*
 eval_*
 
 *.pyc
-
 *.pkl
+
+sync.sh
+
