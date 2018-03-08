@@ -1,4 +1,4 @@
-ID=msvd_topdown
+ID=slower
 python train.py --id $ID --caption_model topdown \
     --input_json data/msvd_dataset/msvd.json \
     --input_fc_dir data/msvd_dataset/msvd_fc --input_att_dir data/msvd_dataset/msvd_att \
