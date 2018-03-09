@@ -91,7 +91,7 @@ def main(params):
             if len(I.shape) == 2:
                 I = I[:, :, np.newaxis]
                 I = np.concatenate((I, I, I), axis=2)
-            I = resize(I, 299, 299)
+
 
             I = I.astype('float32') / 255.0
             I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, h)
@@ -129,6 +129,7 @@ def main(params):
                     if len(I.shape) == 2:
                         I = I[:, :, np.newaxis]
                         I = np.concatenate((I, I, I), axis=2)
+                    I = resize(I, 299, 299)
                     I = I.astype('float32') / 255.0
                     I = I.transpose([2, 0, 1])
                     I = np.expand_dims(I, axis=0)
