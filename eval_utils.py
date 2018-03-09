@@ -109,6 +109,8 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                 seq_this = seq[p, :, :]
                 sents = utils.decode_sequence(loader.get_vocab(), seq_this)
 
+                print('> image %s:' % data['infos'][p]['id'])
+
                 for k, sent in enumerate(sents):
                     entry = {'image_id': data['infos'][p]['id'], 'caption': sent}
                     if eval_kwargs.get('dump_path', 0) == 1:
@@ -121,7 +123,7 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                         os.system(cmd)
 
                     if verbose:
-                        print('image %s: %s' %(entry['image_id'], entry['caption']))
+                        print('    %s' %(entry['caption']))
             # seq [image_idx, beam_idx, sentence]
         else:
             
