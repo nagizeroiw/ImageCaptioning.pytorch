@@ -22,7 +22,7 @@ import misc.utils as utils
 try:
     import tensorflow as tf
 except ImportError:
-    print("Tensorflow not installed; No tensorboard logging.")
+    print("! Tensorflow not installed; No tensorboard logging.")
     tf = None
 
 def add_summary_value(writer, key, value, iteration):

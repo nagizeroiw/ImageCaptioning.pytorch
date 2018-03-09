@@ -67,7 +67,7 @@ class DataLoader(data.Dataset):
         print('> read %d image labels' %(self.num_images))
 
         # separate out indexes for each of the provided splits
-        self.split_ix = {'train': [], 'val': [], 'test': []}
+        self.split_ix = {'train': [], 'val': [], 'test': [], 'show': []}
         for ix in range(len(self.info['images'])):
             img = self.info['images'][ix]
             if img['split'] == 'train':
@@ -76,14 +76,17 @@ class DataLoader(data.Dataset):
                 self.split_ix['val'].append(ix)
             elif img['split'] == 'test':
                 self.split_ix['test'].append(ix)
+            elif img['split'] == 'show':
+                self.split_ix['show'].append(ix) 
             elif opt.train_only == 0: # restval
                 self.split_ix['train'].append(ix)
 
-        print('> assigned %d images to split train' %len(self.split_ix['train']))
-        print('> assigned %d images to split val' %len(self.split_ix['val']))
-        print('> assigned %d images to split test' %len(self.split_ix['test']))
+        print('> assigned %d images to split train' % len(self.split_ix['train']))
+        print('> assigned %d images to split val' % len(self.split_ix['val']))
+        print('> assigned %d images to split test' % len(self.split_ix['test']))
+        print('> assigned %d iamges to split show' % len(self.split_ix['show']))
 
-        self.iterators = {'train': 0, 'val': 0, 'test': 0}
+        self.iterators = {'train': 0, 'val': 0, 'test': 0, 'show': 0}
         
         self._prefetch_process = {} # The three prefetch process
         for split in self.iterators.keys():
