@@ -121,18 +121,25 @@ def main(params):
             # load images
             frames = []
             for frame_idx in range(26):
-                image_name = os.path.join(params['images_root'], '%d-%d.jpg' % (img['cocoid'], frame_idx + 1))
-                I = skimage.io.imread(image_name)
-                if len(I.shape) == 2:
-                    I = I[:, :, np.newaxis]
-                    I = np.concatenate((I, I, I), axis=2)
-                I = I.astype('float32') / 255.0
-                I = I.transpose([2, 0, 1])
-                I = np.expand_dims(I, axis=0)
-                # I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, d)
-                # print('> image shape:', I.shape)
-                # I = Variab.le(preprocess(I), volatile=True)
-                frames.append(I)
+                try:
+                    image_name = os.path.join(params['images_root'], '%d-%d.jpg' % (img['cocoid'], frame_idx + 1))
+                    I = skimage.io.imread(image_name)
+                    if len(I.shape) == 2:
+                        I = I[:, :, np.newaxis]
+                        I = np.concatenate((I, I, I), axis=2)
+                    I = I.astype('float32') / 255.0
+                    I = I.transpose([2, 0, 1])
+                    I = np.expand_dims(I, axis=0)
+                    # I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, d)
+                    # print('> image shape:', I.shape)
+                    # I = Variab.le(preprocess(I), volatile=True)
+                    frames.append(I)
+                except IOError:
+                    # no such image file
+                    if frame_idx > 0:
+                        frames.append(frames[frame_idx - 1])
+                    else:
+                        raise ValueError('! image not found: %d-%d.jpg' % (img['cocoid'], frame_idx + 1))
 
             img_b = np.vstack(frames)
             img_b = torch.from_numpy(img_b).cuda()
