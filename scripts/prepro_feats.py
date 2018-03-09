@@ -79,9 +79,9 @@ def main(params):
             print('- processing %d/%d (%.2f%% done)' % (i, N, i * 100.0 / N))
 
         # check if dest. file exists
-        # if os.path.isfile(os.path.join(dir_fc, str(img['cocoid']) + '.npy')) \
-        # and os.path.isfile(os.path.join(dir_att, str(img['cocoid']) + '.npz')):
-        #     continue
+        if os.path.isfile(os.path.join(dir_fc, str(img['cocoid']) + '.npy')) \
+        and os.path.isfile(os.path.join(dir_att, str(img['cocoid']) + '.npz')):
+            continue
 
         if 'coco' in params['input_json']:
             # load the image
@@ -131,7 +131,7 @@ def main(params):
                 I = np.expand_dims(I, axis=0)
                 # I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, d)
                 # print('> image shape:', I.shape)
-                # I = Variable(preprocess(I), volatile=True)
+                # I = Variab.le(preprocess(I), volatile=True)
                 frames.append(I)
 
             img_b = np.vstack(frames)
