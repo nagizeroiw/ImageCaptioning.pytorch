@@ -109,7 +109,7 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                 seq_this = seq[p, :, :]
                 sents = utils.decode_sequence(loader.get_vocab(), seq_this)
 
-                print('> image %s:' % data['infos'][p]['id'])
+                print('> video id %s:' % data['infos'][p]['id'])
 
                 for k, sent in enumerate(sents):
                     entry = {'image_id': data['infos'][p]['id'], 'caption': sent}
