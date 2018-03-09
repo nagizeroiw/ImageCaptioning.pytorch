@@ -154,7 +154,7 @@ class AttModel(CaptionModel):
             self.done_beams[k] = self.beam_search(state, logprobs, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, opt=opt)
             seq[:, k] = self.done_beams[k][0]['seq'] # the first beam has highest cumulative score
             seqLogprobs[:, k] = self.done_beams[k][0]['logps']
-            for i in self.done_beams[k]:
+            for i in range(len(self.done_beams[k])):
                 seq_all[:, i, k] = self.done_beams[k][i]['seq']
         # return the samples and their log likelihoods
         if opt.get('print_all_beam') is True:
