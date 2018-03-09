@@ -25,6 +25,10 @@ def read():
     valid_dict = {vid : 'val' for vid in valid_split}
     test_dict = {vid : 'test' for vid in test_split}
 
+    print('> train vids: %d' % len(train_dict))
+    print('> valid vids: %d' % len(valid_dict))
+    print('> test vids: %d' % len(test_dict))
+
     split_dict = train_dict
     split_dict.update(valid_dict)
     split_dict.update(test_dict)
@@ -76,23 +80,27 @@ def read():
             images[vid]['sentids'].append(sentence_id)
             sentence_id += 1
 
+    print('> total sentences: %d' % sentence_id)
+    print('> images for coco reference: %d' % len(igs))
+    print('> sentences for coco reference: %d' % len(anno_dict))
+
     # dump dataset_msvd.json and coco_reference_msvd.json
     dataset_msvd = {}
     dataset_msvd['images'] = images
     with open('data/kuaishou_dataset/dataset_kuaishou.json', 'w') as file:
         json.dump(dataset_msvd, file)
-    print('> wrote dataset_msvd.json')
+    print('> wrote dataset_kuaishou.json')
     print('>', dataset_msvd['images'][0])
 
     coco_ref_msvd = {}
     coco_ref_msvd['annotations'] = annotations
     coco_ref_msvd['images'] = igs
     coco_ref_msvd['type'] = 'captions'
-    coco_ref_msvd['info'] = 'msvd'
+    coco_ref_msvd['info'] = 'kuaishou'
     coco_ref_msvd['licenses'] = 'Ke Su'
     with open('data/kuaishou_dataset/coco_ref_kuaishou.json', 'w') as file:
         json.dump(coco_ref_msvd, file)
-    print('> wrote coco_ref_msvd.json')
+    print('> wrote coco_ref_kuaishou.json')
     print('>', coco_ref_msvd['annotations'][:4])
 
 if __name__ == '__main__':
