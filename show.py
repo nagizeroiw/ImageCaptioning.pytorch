@@ -51,6 +51,7 @@ def show(opt):
 
     model = models.setup(opt)
     model.cuda()
+    model.load_state_dict(torch.load(os.path.join(opt.start_from, 'model-best.pth')))
 
     crit = utils.LanguageModelCriterion()
 
