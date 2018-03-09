@@ -9,11 +9,11 @@ import random
 def read():
     with open('data/kuaishou_raw/vid2name.pkl') as file:
         vid2name = cPickle.load(file)
-    # vid2name: int -> str
+    # vid2name: int? -> str
     n_video = len(vid2name.keys())
     print('> total video count (n_video): {}'.format(n_video))
 
-    vids = vid2name.keys()
+    vids = range(len(vid2name.keys()))
     random.shuffle(vids)
 
     # kuaishou split: 1600 | 499
