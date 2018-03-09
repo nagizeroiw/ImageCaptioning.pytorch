@@ -103,7 +103,7 @@ class AttModel(CaptionModel):
             xt = self.embed(it)  # (batch_size, input_encoding_size) -> input of this time-step
 
             output, state = self.core(xt, fc_feats, att_feats, p_att_feats, state)
-            output = F.log_softmax(self.logit(output))  # (batch_size, vocab_size)
+            output = F.log_softmax(self.logit(output), 1)  # (batch_size, vocab_size)
             outputs.append(output)
 
         return torch.cat([_.unsqueeze(1) for _ in outputs], 1)  # (batch_size, max_seq_len, vocab_size)
@@ -113,7 +113,7 @@ class AttModel(CaptionModel):
         xt = self.embed(it)
 
         output, state = self.core(xt, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, state)
-        logprobs = F.log_softmax(self.logit(output))
+        logprobs = F.log_softmax(self.logit(output), 1)
 
         return logprobs, state
 
@@ -149,7 +149,7 @@ class AttModel(CaptionModel):
                     xt = self.embed(Variable(it, requires_grad=False))
 
                 output, state = self.core(xt, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, state)
-                logprobs = F.log_softmax(self.logit(output))
+                logprobs = F.log_softmax(self.logit(output), 1)
 
             self.done_beams[k] = self.beam_search(state, logprobs, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, opt=opt)
             seq[:, k] = self.done_beams[k][0]['seq'] # the first beam has highest cumulative score
@@ -426,7 +426,7 @@ class Attention(nn.Module):
         dot = self.alpha_net(dot)                           # (batch * att_size) * 1
         dot = dot.view(-1, att_size)                        # batch * att_size
         
-        weight = F.softmax(dot)                             # batch * att_size
+        weight = F.softmax(dot, 1)                             # batch * att_size
         att_feats_ = att_feats.view(-1, att_size, self.rnn_size) # batch * att_size * att_feat_size
         att_res = torch.bmm(weight.unsqueeze(1), att_feats_).squeeze(1) # batch * att_feat_size
 
