@@ -69,6 +69,7 @@ def eval_split(model, crit, loader, eval_kwargs={}):
     split = eval_kwargs.get('split', 'test')
     lang_eval = eval_kwargs.get('language_eval', 0)
     dataset = eval_kwargs.get('dataset', 'coco')
+    print_all_beam = eval_kwargs.get('print_all_beam', False)
 
     print('beam_size', eval_kwargs.get('beam_size'))
     print('> language_eval', lang_eval)
@@ -105,23 +106,28 @@ def eval_split(model, crit, loader, eval_kwargs={}):
         fc_feats, att_feats = tmp
         # forward the model to also get generated samples for each image
         seq, _ = model.sample(fc_feats, att_feats, eval_kwargs)
-        
-        #set_trace()
-        sents = utils.decode_sequence(loader.get_vocab(), seq)
 
-        for k, sent in enumerate(sents):
-            entry = {'image_id': data['infos'][k]['id'], 'caption': sent}
-            if eval_kwargs.get('dump_path', 0) == 1:
-                entry['file_name'] = data['infos'][k]['file_path']
-            predictions.append(entry)
-            if eval_kwargs.get('dump_images', 0) == 1:
-                # dump the raw image to vis/ folder
-                cmd = 'cp "' + os.path.join(eval_kwargs['image_root'], data['infos'][k]['file_path']) + '" vis/imgs/img' + str(len(predictions)) + '.jpg' # bit gross
-                print(cmd)
-                os.system(cmd)
+        if print_all_beam is True:
+            pass
+            # seq [image_idx, beam_idx, sentence]
+        else:
+            
+            #set_trace()
+            sents = utils.decode_sequence(loader.get_vocab(), seq)
 
-            if verbose:
-                print('image %s: %s' %(entry['image_id'], entry['caption']))
+            for k, sent in enumerate(sents):
+                entry = {'image_id': data['infos'][k]['id'], 'caption': sent}
+                if eval_kwargs.get('dump_path', 0) == 1:
+                    entry['file_name'] = data['infos'][k]['file_path']
+                predictions.append(entry)
+                if eval_kwargs.get('dump_images', 0) == 1:
+                    # dump the raw image to vis/ folder
+                    cmd = 'cp "' + os.path.join(eval_kwargs['image_root'], data['infos'][k]['file_path']) + '" vis/imgs/img' + str(len(predictions)) + '.jpg' # bit gross
+                    print(cmd)
+                    os.system(cmd)
+
+                if verbose:
+                    print('image %s: %s' %(entry['image_id'], entry['caption']))
 
         # if we wrapped around the split or used up val imgs budget then bail
         ix0 = data['bounds']['it_pos_now']

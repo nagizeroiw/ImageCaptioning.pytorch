@@ -133,6 +133,7 @@ class AttModel(CaptionModel):
         assert beam_size <= self.vocab_size + 1, 'lets assume this for now, otherwise this corner case causes a few headaches down the road. can be dealt with in future if needed'
         seq = torch.LongTensor(self.seq_length, batch_size).zero_()
         seqLogprobs = torch.FloatTensor(self.seq_length, batch_size)
+        seq_all = torch.LongTensor(self.seq_length, beam_size, batch_size)
         # lets process every image independently for now, for simplicity
 
         self.done_beams = [[] for _ in range(batch_size)]
@@ -153,7 +154,11 @@ class AttModel(CaptionModel):
             self.done_beams[k] = self.beam_search(state, logprobs, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, opt=opt)
             seq[:, k] = self.done_beams[k][0]['seq'] # the first beam has highest cumulative score
             seqLogprobs[:, k] = self.done_beams[k][0]['logps']
+            for i in self.done_beams[k]:
+                seq_all[:, i, k] = self.done_beams[k][i]['seq']
         # return the samples and their log likelihoods
+        if opt.get('print_all_beam') is True:
+            return seq_all.transpose(0, 2), None
         return seq.transpose(0, 1), seqLogprobs.transpose(0, 1)
 
     def sample(self, fc_feats, att_feats, opt={}):
