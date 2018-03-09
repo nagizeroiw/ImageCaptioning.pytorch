@@ -105,10 +105,10 @@ def eval_split(model, crit, loader, eval_kwargs={}):
         seq, _ = model.sample(fc_feats, att_feats, eval_kwargs)
 
         if print_all_beam is True:
-            for k in xrange(seq.shape[0]):
-                seq_this = seq[k, :, :]
+            for p in xrange(seq.shape[0]):
+                seq_this = seq[p, :, :]
                 sents = utils.decode_sequence(loader.get_vocab(), seq_this)
-                
+
                 for k, sent in enumerate(sents):
                     entry = {'image_id': data['infos'][k]['id'], 'caption': sent}
                     if eval_kwargs.get('dump_path', 0) == 1:
