@@ -70,6 +70,8 @@ def eval_split(model, crit, loader, eval_kwargs={}):
     lang_eval = eval_kwargs.get('language_eval', 0)
     dataset = eval_kwargs.get('dataset', 'coco')
 
+    print('> language_eval: %s', lang_eval)
+
     # Make sure in the evaluation mode
     model.eval()
 
@@ -128,7 +130,7 @@ def eval_split(model, crit, loader, eval_kwargs={}):
         for i in range(n - ix1):
             predictions.pop()
 
-        if verbose:
+        if verbose and split is not 'show':
             print('evaluating validation preformance... %d/%d (%f)' %(ix0 - 1, ix1, loss))
 
         if data['bounds']['wrapped']:
