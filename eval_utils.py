@@ -110,9 +110,9 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                 sents = utils.decode_sequence(loader.get_vocab(), seq_this)
 
                 for k, sent in enumerate(sents):
-                    entry = {'image_id': data['infos'][k]['id'], 'caption': sent}
+                    entry = {'image_id': data['infos'][p]['id'], 'caption': sent}
                     if eval_kwargs.get('dump_path', 0) == 1:
-                        entry['file_name'] = data['infos'][k]['file_path']
+                        entry['file_name'] = data['infos'][p]['file_path']
                     predictions.append(entry)
                     if eval_kwargs.get('dump_images', 0) == 1:
                         # dump the raw image to vis/ folder
