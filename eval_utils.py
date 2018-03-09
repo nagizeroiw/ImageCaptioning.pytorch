@@ -24,6 +24,9 @@ def language_eval(dataset, preds, model_id, split):
     elif 'msvd' in dataset:
         sys.path.append('coco-caption')
         annFile = 'coco-caption/annotations/coco_ref_msvd.json'
+    elif 'kuaishou' in dataset:
+        sys.path.append('coco-caption')
+        annFile = 'coco-caption/annotations/coco_ref_kuaishou.json'
     else:
         sys.path.append("f30k-caption")
         annFile = 'f30k-caption/annotations/dataset_flickr30k.json'
