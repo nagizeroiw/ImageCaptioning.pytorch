@@ -105,7 +105,23 @@ def eval_split(model, crit, loader, eval_kwargs={}):
         seq, _ = model.sample(fc_feats, att_feats, eval_kwargs)
 
         if print_all_beam is True:
-            pass
+            for k in xrange(seq.shape[0]):
+                seq_this = seq[k, :, :]
+                sents = utils.decode_sequence(loader.get_vocab(), seq_this)
+                
+                for k, sent in enumerate(sents):
+                    entry = {'image_id': data['infos'][k]['id'], 'caption': sent}
+                    if eval_kwargs.get('dump_path', 0) == 1:
+                        entry['file_name'] = data['infos'][k]['file_path']
+                    predictions.append(entry)
+                    if eval_kwargs.get('dump_images', 0) == 1:
+                        # dump the raw image to vis/ folder
+                        cmd = 'cp "' + os.path.join(eval_kwargs['image_root'], data['infos'][k]['file_path']) + '" vis/imgs/img' + str(len(predictions)) + '.jpg' # bit gross
+                        print(cmd)
+                        os.system(cmd)
+
+                    if verbose:
+                        print('image %s: %s' %(entry['image_id'], entry['caption']))
             # seq [image_idx, beam_idx, sentence]
         else:
             
