@@ -130,7 +130,7 @@ def main(params):
                 I = I.transpose([2, 0, 1])
                 I = np.expand_dims(I, axis=0)
                 # I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, d)
-                print('> image shape:', I.shape)
+                # print('> image shape:', I.shape)
                 # I = Variable(preprocess(I), volatile=True)
                 frames.append(I)
 
