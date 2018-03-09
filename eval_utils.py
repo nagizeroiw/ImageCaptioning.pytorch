@@ -145,7 +145,7 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                     os.system(cmd)
 
                 if verbose:
-                    print('image %s: %s' %(entry['image_id'], entry['caption']))
+                    print('video %s: %s' %(entry['image_id'], entry['caption']))
 
         # if we wrapped around the split or used up val imgs budget then bail
         ix0 = data['bounds']['it_pos_now']

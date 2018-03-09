@@ -80,6 +80,8 @@ def read():
             images[vid]['sentids'].append(sentence_id)
             sentence_id += 1
 
+    images = [img for img in images if len(img['sentids']) > 0]
+
     print('> total sentences: %d' % sentence_id)
     print('> images for coco reference: %d' % len(igs))
     print('> sentences for coco reference: %d' % len(anno_dict))
