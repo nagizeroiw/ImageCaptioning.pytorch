@@ -145,9 +145,12 @@ class DataLoader(data.Dataset):
             if tmp_wrapped:
                 wrapped = True
 
-            # Used for reward evaluation
-            gts.append(self.h5_label_file['labels'][self.label_start_ix[ix] - 1: self.label_end_ix[ix]])
-        
+            try:
+                # Used for reward evaluation
+                gts.append(self.h5_label_file['labels'][self.label_start_ix[ix] - 1: self.label_end_ix[ix]])
+            except ValueError:
+                print('start %d, end %d' % (self.label_start_ix[ix], self.label_end_ix[ix]))
+
             # record associated info as well
             info_dict = {}
             info_dict['ix'] = ix
