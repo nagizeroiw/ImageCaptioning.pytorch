@@ -121,7 +121,7 @@ def main(params):
             # load images
             frames = []
             for frame_idx in range(26):
-                image_name = os.path.join(params['images_root'], '%d-%d.jpg' % (img['cocoid'], frame_idx))
+                image_name = os.path.join(params['images_root'], '%d-%d.jpg' % (img['cocoid'], frame_idx + 1))
                 I = skimage.io.imread(image_name)
                 if len(I.shape) == 2:
                     I = I[:, :, np.newaxis]
