@@ -58,7 +58,8 @@ def show(opt):
     # eval model
     eval_kwargs = {'split': 'test',
                     'dataset': opt.input_json,
-                    'language_eval': 0}
+                    'language_eval': 0,
+                    'beam_size': 5}
     eval_kwargs.update(vars(opt))
     val_loss, predictions, lang_stats = eval_utils.eval_split(model, crit, loader, eval_kwargs)
 
