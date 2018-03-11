@@ -81,8 +81,6 @@ class DataLoader(data.Dataset):
             if is_show:
                 if img['id'] in show_ids:
                     self.split_ix['show'].append(ix)
-                    continue
-
             if img['split'] == 'train':
                 self.split_ix['train'].append(ix)
             elif img['split'] == 'val':
