@@ -1,6 +1,7 @@
 
 data/*
 log_*/
+clips/*
 coco-caption/*
 eval_*
 
