@@ -32,7 +32,7 @@ def add_summary_value(writer, key, value, iteration):
 def show(opt):
 
     opt.use_att = utils.if_use_att(opt.caption_model)
-    loader = DataLoader(opt)
+    loader = DataLoader(opt, is_show=True)
     opt.vocab_size = loader.vocab_size
     opt.seq_length = loader.seq_length
 
@@ -58,7 +58,7 @@ def show(opt):
     # eval model
     eval_kwargs = {}
     eval_kwargs.update(vars(opt))
-    eval_kwargs.update({'split': 'test',
+    eval_kwargs.update({'split': 'show',
                         'dataset': opt.input_json,
                         'language_eval': 0,
                         'beam_size': 5,
