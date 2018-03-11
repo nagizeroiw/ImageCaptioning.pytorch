@@ -46,9 +46,6 @@ def show(opt):
             for checkme in need_be_same:
                 assert vars(saved_model_opt)[checkme] == vars(opt)[checkme], "! Command line argument and saved model disagree on '%s' " % checkme
 
-    loader.iterators = infos.get('iterators', loader.iterators)
-    loader.split_ix = infos.get('split_ix', loader.split_ix)
-
     model = models.setup(opt)
     model.cuda()
     model.load_state_dict(torch.load(os.path.join(opt.start_from, 'model-best.pth')))

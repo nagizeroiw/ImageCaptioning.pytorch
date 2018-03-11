@@ -75,7 +75,7 @@ class DataLoader(data.Dataset):
 
         # separate out indexes for each of the provided splits
         self.split_ix = {'train': [], 'val': [], 'test': [], 'show': []}
-        
+
         for ix in range(len(self.info['images'])):
             img = self.info['images'][ix]
 
