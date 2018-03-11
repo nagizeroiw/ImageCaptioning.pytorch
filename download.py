@@ -13,8 +13,17 @@ vid_url = {
 }
 
 def main(dataset, vid):
+    
     vid2name = cPickle.load(open(vid2name_path[dataset]))
-    os.system('scp %s%s ./clips/%s_%d.%s' % (vid_url[dataset], vid2name[vid], dataset, vid, vid2name[vid].split('.')[-1]))
+    if dataset == 'kuaishou':
+        vid_key = str(vid)
+        name = vid_url[dataset] + vid2name[vid_key] + '.mp4'
+        ex = '.mp4'
+    else:
+        vid_key = vid
+        name = vid_url[dataset] + vid2name[vid_key]
+        ex = vid2name[vid_key].split('.')[-1]
+    os.system('scp %s ./clips/%s_%d.%s' % (name, dataset, vid, ex))
 
 if __name__ == '__main__':
     dataset = sys.argv[1]

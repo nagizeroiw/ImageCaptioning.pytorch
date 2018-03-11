@@ -107,11 +107,12 @@ def eval_split(model, crit, loader, eval_kwargs={}):
         tmp = [Variable(torch.from_numpy(_), volatile=True).cuda() for _ in tmp]
         fc_feats, att_feats = tmp
         # forward the model to also get generated samples for each image
-        seq, _ = model.sample(fc_feats, att_feats, eval_kwargs)
+        seq, prob = model.sample(fc_feats, att_feats, eval_kwargs)
 
         if print_all_beam is True:
             for p in xrange(seq.shape[0]):
                 seq_this = seq[p, :, :]
+                prob_this = prob[p, :, :]
                 sents = utils.decode_sequence(loader.get_vocab(), seq_this)
 
                 print('> video id %s:' % data['infos'][p]['id'])
@@ -128,7 +129,7 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                         os.system(cmd)
 
                     if verbose:
-                        print('    %s' %(entry['caption']))
+                        print('    %s (%.5f)' %(entry['caption'], sum(prob_this[k, :])))
             # seq [image_idx, beam_idx, sentence]
         else:
             
