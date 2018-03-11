@@ -120,6 +120,7 @@ class AttModel(CaptionModel):
     def sample_beam(self, fc_feats, att_feats, opt={}):
         beam_size = opt.get('beam_size', 10)
         batch_size = fc_feats.size(0)
+        print('> sample_beam print_all_beam', opt.get('print_all_beam'))
 
         # embed fc and att feats
         fc_feats = self.fc_embed(fc_feats)
