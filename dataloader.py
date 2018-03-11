@@ -75,7 +75,7 @@ class DataLoader(data.Dataset):
 
         # separate out indexes for each of the provided splits
         self.split_ix = {'train': [], 'val': [], 'test': [], 'show': []}
-        print(self.split_ix)
+        
         for ix in range(len(self.info['images'])):
             img = self.info['images'][ix]
 
@@ -99,7 +99,6 @@ class DataLoader(data.Dataset):
         print('> assigned %d iamges to split show' % len(self.split_ix['show']))
 
         self.iterators = {'train': 0, 'val': 0, 'test': 0, 'show': 0}
-        print(self.iterators)
         
         self._prefetch_process = {} # The three prefetch process
         for split in self.iterators.keys():
@@ -226,6 +225,8 @@ class BlobFetcher():
         2. wrapped: a new epoch, the split_ix and iterator have been updated in the get_minibatch_inds already.
         """
         # batch_size is 0, the merge is done in DataLoader class
+        print(self.dataloader.split_ix.keys())
+        print(self.dataloader.iterators.keys())
         self.split_loader = iter(data.DataLoader(dataset=self.dataloader,
                                             batch_size=1,
                                             sampler=self.dataloader.split_ix[self.split][self.dataloader.iterators[self.split]:],
