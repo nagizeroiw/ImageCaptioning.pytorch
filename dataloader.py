@@ -69,7 +69,7 @@ class DataLoader(data.Dataset):
         if 'msvd' in opt.input_json:
             show_ids = [27, 30, 45, 53, 90]
         elif 'kuaishou' in opt.input_json:
-            show_ids = []
+            show_ids = [1415, 1464, 1483, 1581, 2086]
         else:
             show_ids = []
 
