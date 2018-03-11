@@ -225,8 +225,6 @@ class BlobFetcher():
         2. wrapped: a new epoch, the split_ix and iterator have been updated in the get_minibatch_inds already.
         """
         # batch_size is 0, the merge is done in DataLoader class
-        print(self.dataloader.split_ix.keys())
-        print(self.dataloader.iterators.keys())
         self.split_loader = iter(data.DataLoader(dataset=self.dataloader,
                                             batch_size=1,
                                             sampler=self.dataloader.split_ix[self.split][self.dataloader.iterators[self.split]:],
