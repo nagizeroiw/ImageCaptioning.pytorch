@@ -75,6 +75,7 @@ class DataLoader(data.Dataset):
 
         # separate out indexes for each of the provided splits
         self.split_ix = {'train': [], 'val': [], 'test': [], 'show': []}
+        print(self.split_ix)
         for ix in range(len(self.info['images'])):
             img = self.info['images'][ix]
 
@@ -98,6 +99,7 @@ class DataLoader(data.Dataset):
         print('> assigned %d iamges to split show' % len(self.split_ix['show']))
 
         self.iterators = {'train': 0, 'val': 0, 'test': 0, 'show': 0}
+        print(self.iterators)
         
         self._prefetch_process = {} # The three prefetch process
         for split in self.iterators.keys():
