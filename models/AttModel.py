@@ -167,6 +167,7 @@ class AttModel(CaptionModel):
         sample_max = opt.get('sample_max', 1)
         beam_size = opt.get('beam_size', 1)
         temperature = opt.get('temperature', 1.0)
+        print('> sample beam_size', beam_size)
         if beam_size > 1:
             return self.sample_beam(fc_feats, att_feats, opt)
 
