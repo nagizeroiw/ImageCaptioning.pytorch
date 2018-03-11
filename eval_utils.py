@@ -15,6 +15,7 @@ import time
 import os
 import sys
 import misc.utils as utils
+import math
 
 def language_eval(dataset, preds, model_id, split):
     import sys
@@ -129,7 +130,7 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                         os.system(cmd)
 
                     if verbose:
-                        print('    %s (%.5f)' %(entry['caption'], sum(prob_this[k, :])))
+                        print('    %s (%.5f)' %(entry['caption'], math.exp(sum(prob_this[k, :]))))
             # seq [image_idx, beam_idx, sentence]
         else:
             
