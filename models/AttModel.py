@@ -158,6 +158,7 @@ class AttModel(CaptionModel):
                 seq_all[:, i, k] = self.done_beams[k][i]['seq']
         # return the samples and their log likelihoods
         if opt.get('print_all_beam') is True:
+            print('> print all beam')
             return seq_all.transpose(0, 2), None
         return seq.transpose(0, 1), seqLogprobs.transpose(0, 1)
 
