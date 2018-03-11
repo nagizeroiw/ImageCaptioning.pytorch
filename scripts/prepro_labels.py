@@ -115,7 +115,10 @@ def encode_captions(imgs, params, wtoi):
     counter = 1
     for i, img in enumerate(imgs):
         n = len(img['final_captions'])
-        assert n > 0, '! error: some image has no captions'
+        # assert n > 0, '! error: some image has no captions'
+        if n == 0:
+            print('! video has no caption: %s' % img['cocoid'])
+            continue
 
         Li = np.zeros((n, max_length), dtype='uint32')
         for j, s in enumerate(img['final_captions']):

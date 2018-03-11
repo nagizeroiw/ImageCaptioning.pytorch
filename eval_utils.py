@@ -24,6 +24,9 @@ def language_eval(dataset, preds, model_id, split):
     elif 'msvd' in dataset:
         sys.path.append('coco-caption')
         annFile = 'coco-caption/annotations/coco_ref_msvd.json'
+    elif 'kuaishou' in dataset:
+        sys.path.append('coco-caption')
+        annFile = 'coco-caption/annotations/coco_ref_kuaishou.json'
     else:
         sys.path.append("f30k-caption")
         annFile = 'f30k-caption/annotations/dataset_flickr30k.json'
@@ -142,7 +145,7 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                     os.system(cmd)
 
                 if verbose:
-                    print('image %s: %s' %(entry['image_id'], entry['caption']))
+                    print('video %s: %s' %(entry['image_id'], entry['caption']))
 
         # if we wrapped around the split or used up val imgs budget then bail
         ix0 = data['bounds']['it_pos_now']

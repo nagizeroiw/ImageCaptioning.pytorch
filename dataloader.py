@@ -128,6 +128,8 @@ class DataLoader(data.Dataset):
             ix1 = self.label_start_ix[ix] - 1 # label_start_ix starts from 1 ("counter = 1")
             ix2 = self.label_end_ix[ix] - 1
             ncap = ix2 - ix1 + 1 # number of captions available for this image
+            if ix1 == -1 and ix2 == -1:
+                continue
             assert ncap > 0, '! an image does not have any label. this can be handled but right now isn\'t'
 
             if ncap < seq_per_img:
@@ -145,9 +147,12 @@ class DataLoader(data.Dataset):
             if tmp_wrapped:
                 wrapped = True
 
-            # Used for reward evaluation
-            gts.append(self.h5_label_file['labels'][self.label_start_ix[ix] - 1: self.label_end_ix[ix]])
-        
+            try:
+                # Used for reward evaluation
+                gts.append(self.h5_label_file['labels'][self.label_start_ix[ix] - 1: self.label_end_ix[ix]])
+            except ValueError:
+                print('start %d, end %d' % (self.label_start_ix[ix], self.label_end_ix[ix]))
+
             # record associated info as well
             info_dict = {}
             info_dict['ix'] = ix

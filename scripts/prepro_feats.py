@@ -40,6 +40,7 @@ import torch
 import torchvision.models as models
 from torch.autograd import Variable
 import skimage.io
+from skimage.transform import resize
 
 from torchvision import transforms as trn
 preprocess = trn.Compose([
@@ -79,9 +80,9 @@ def main(params):
             print('- processing %d/%d (%.2f%% done)' % (i, N, i * 100.0 / N))
 
         # check if dest. file exists
-        # if os.path.isfile(os.path.join(dir_fc, str(img['cocoid']) + '.npy')) \
-        # and os.path.isfile(os.path.join(dir_att, str(img['cocoid']) + '.npz')):
-        #     continue
+        if os.path.isfile(os.path.join(dir_fc, str(img['cocoid']) + '.npy')) \
+        and os.path.isfile(os.path.join(dir_att, str(img['cocoid']) + '.npz')):
+            continue
 
         if 'coco' in params['input_json']:
             # load the image
@@ -90,6 +91,7 @@ def main(params):
             if len(I.shape) == 2:
                 I = I[:, :, np.newaxis]
                 I = np.concatenate((I, I, I), axis=2)
+
 
             I = I.astype('float32') / 255.0
             I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, h)
@@ -117,6 +119,30 @@ def main(params):
                 # I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, d)
                 # I = Variable(preprocess(I), volatile=True)
                 frames.append(I)
+        elif 'kuaishou' in params['input_json']:
+            # load images
+            frames = []
+            for frame_idx in range(26):
+                try:
+                    image_name = os.path.join(params['images_root'], '%d-%d.jpg' % (img['cocoid'], frame_idx + 1))
+                    I = skimage.io.imread(image_name)
+                    if len(I.shape) == 2:
+                        I = I[:, :, np.newaxis]
+                        I = np.concatenate((I, I, I), axis=2)
+                    I = resize(I, (299, 299))
+                    I = I.astype('float32') / 255.0
+                    I = I.transpose([2, 0, 1])
+                    I = np.expand_dims(I, axis=0)
+                    # I = torch.from_numpy(I.transpose([2, 0, 1])).cuda()  # (3, w, d)
+                    # print('> image shape:', I.shape)
+                    # I = Variab.le(preprocess(I), volatile=True)
+                    frames.append(I)
+                except IOError:
+                    # no such image file
+                    if frame_idx > 0:
+                        frames.append(frames[frame_idx - 1])
+                    else:
+                        raise ValueError('! image not found: %d-%d.jpg' % (img['cocoid'], frame_idx + 1))
 
             img_b = np.vstack(frames)
             img_b = torch.from_numpy(img_b).cuda()
