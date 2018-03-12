@@ -116,6 +116,7 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                 prob_this = prob[p, :, :]
                 sents = utils.decode_sequence(loader.get_vocab(), seq_this)
 
+                print('---------------------------------------------------------')
                 print('> video id %s:' % data['infos'][p]['id'])
 
                 for k, sent in enumerate(sents):
@@ -131,6 +132,10 @@ def eval_split(model, crit, loader, eval_kwargs={}):
 
                     if verbose:
                         print('    %s (%.5f)' %(entry['caption'], math.exp(sum(prob_this[k, :]))))
+
+                print('---------------------------------------------------------')
+                if split == 'show':
+                    p = raw_input()
             # seq [image_idx, beam_idx, sentence]
         else:
             

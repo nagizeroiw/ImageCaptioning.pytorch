@@ -1,0 +1,41 @@
+video id: 27
+    a woman is riding a horse
+    a girl rode a horse down the path
+    a girl is doing horse riding
+    a girl is riding the horse
+    a girl is showing how to ride a horse
+    a woman riding a horse
+
+video id: 30
+    a man mixes a pot of rice
+    someone stirred the rice in the pot
+    the man is stirring the rice
+    someone is stirring rice with a wooden spoon
+    the person is cooking the rice
+    the person is cooking the rice
+
+video id: 45
+    a person is cutting chicken
+    a person is cutting meat
+    a chef is cutting pieces of chicken
+    a man is cutting a chicken
+    a man is cutting up pieces of chicken
+    someone chops chicken
+
+video id: 53
+    a man walks along the sidewalk
+    a man walks down a city sidewalk
+    a man is singing on the street
+    the man is singing and walking
+    a men is singing
+    a man is walking and singing on a street
+    a man is walking down a city sidewalk
+
+video id: 90
+    a man is riding a horse and shooting a gun
+    a guy is riding the horse in the ground
+    a man is riding on a horse
+    a man is riding in the horse
+    a man is shooting while riding on a horse
+    a cowboy is riding a horse and shooting balloons
+    the man on the horse shot his gun at targets

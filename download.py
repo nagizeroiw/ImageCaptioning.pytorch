@@ -1,6 +1,7 @@
 import cPickle
 import sys
 import os
+import json
 
 vid2name_path = {
     'msvd': './data/msvd_raw/vid2name.pkl',
@@ -26,6 +27,14 @@ def main(dataset, vid):
     os.system('scp %s ./clips/%s_%d.%s' % (name, dataset, vid, ex))
 
 if __name__ == '__main__':
-    dataset = sys.argv[1]
-    vid = int(sys.argv[2])
-    main(dataset, vid)
+    # dataset = sys.argv[1]
+    # vid = int(sys.argv[2])
+    # main(dataset, vid)
+    vids = [27, 30, 45, 53, 90]
+    captions = json.load(open('./data/msvd_raw/dataset_msvd.json'))['images']
+    for img in captions:
+        if img['cocoid'] in vids:
+            print 'video id:', img['cocoid']
+            for sentence in img['sentences']:
+                print '   ', sentence['raw']
+
