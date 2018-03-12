@@ -88,8 +88,7 @@ def main(params):
         # check if dest. file exists
         if os.path.isfile(os.path.join(dir_fc, str(img['cocoid']) + '.npy')) \
         and os.path.isfile(os.path.join(dir_att, str(img['cocoid']) + '.npz')):
-            pass
-            # continue
+            continue
 
         if 'coco' in params['input_json']:
             # load the image
