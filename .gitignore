@@ -1,11 +1,12 @@
 
 data/*
 log_*/
+clips/*
 coco-caption/*
 eval_*
 
 *.pyc
 *.pkl
-
+*.json
 sync.sh
 

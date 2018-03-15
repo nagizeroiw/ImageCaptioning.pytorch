@@ -120,6 +120,7 @@ class AttModel(CaptionModel):
     def sample_beam(self, fc_feats, att_feats, opt={}):
         beam_size = opt.get('beam_size', 10)
         batch_size = fc_feats.size(0)
+        print('> sample_beam print_all_beam', opt.get('print_all_beam'))
 
         # embed fc and att feats
         fc_feats = self.fc_embed(fc_feats)
@@ -134,6 +135,7 @@ class AttModel(CaptionModel):
         seq = torch.LongTensor(self.seq_length, batch_size).zero_()
         seqLogprobs = torch.FloatTensor(self.seq_length, batch_size)
         seq_all = torch.LongTensor(self.seq_length, beam_size, batch_size)
+        probs_all = torch.FloatTensor(self.seq_length, beam_size, batch_size)
         # lets process every image independently for now, for simplicity
 
         self.done_beams = [[] for _ in range(batch_size)]
@@ -156,15 +158,18 @@ class AttModel(CaptionModel):
             seqLogprobs[:, k] = self.done_beams[k][0]['logps']
             for i in range(len(self.done_beams[k])):
                 seq_all[:, i, k] = self.done_beams[k][i]['seq']
+                probs_all[:, i, k] = self.done_beams[k][i]['logps']
         # return the samples and their log likelihoods
         if opt.get('print_all_beam') is True:
-            return seq_all.transpose(0, 2), None
+            print('> print all beam')
+            return seq_all.transpose(0, 2), probs_all.transpose(0, 2)
         return seq.transpose(0, 1), seqLogprobs.transpose(0, 1)
 
     def sample(self, fc_feats, att_feats, opt={}):
         sample_max = opt.get('sample_max', 1)
         beam_size = opt.get('beam_size', 1)
         temperature = opt.get('temperature', 1.0)
+        print('> sample beam_size', beam_size)
         if beam_size > 1:
             return self.sample_beam(fc_feats, att_feats, opt)
 

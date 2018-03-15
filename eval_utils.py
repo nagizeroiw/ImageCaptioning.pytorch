@@ -15,6 +15,7 @@ import time
 import os
 import sys
 import misc.utils as utils
+import math
 
 def language_eval(dataset, preds, model_id, split):
     import sys
@@ -74,6 +75,8 @@ def eval_split(model, crit, loader, eval_kwargs={}):
     dataset = eval_kwargs.get('dataset', 'coco')
     print_all_beam = eval_kwargs.get('print_all_beam', False)
 
+    print('> print_all_beam', print_all_beam)
+
     # Make sure in the evaluation mode
     model.eval()
 
@@ -105,13 +108,15 @@ def eval_split(model, crit, loader, eval_kwargs={}):
         tmp = [Variable(torch.from_numpy(_), volatile=True).cuda() for _ in tmp]
         fc_feats, att_feats = tmp
         # forward the model to also get generated samples for each image
-        seq, _ = model.sample(fc_feats, att_feats, eval_kwargs)
+        seq, prob = model.sample(fc_feats, att_feats, eval_kwargs)
 
         if print_all_beam is True:
             for p in xrange(seq.shape[0]):
                 seq_this = seq[p, :, :]
+                prob_this = prob[p, :, :]
                 sents = utils.decode_sequence(loader.get_vocab(), seq_this)
 
+                print('---------------------------------------------------------')
                 print('> video id %s:' % data['infos'][p]['id'])
 
                 for k, sent in enumerate(sents):
@@ -126,7 +131,11 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                         os.system(cmd)
 
                     if verbose:
-                        print('    %s' %(entry['caption']))
+                        print('    %s (%.5f)' %(entry['caption'], math.exp(sum(prob_this[k, :]))))
+
+                print('---------------------------------------------------------')
+                if split == 'show':
+                    p = raw_input()
             # seq [image_idx, beam_idx, sentence]
         else:
             

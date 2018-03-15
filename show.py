@@ -32,7 +32,7 @@ def add_summary_value(writer, key, value, iteration):
 def show(opt):
 
     opt.use_att = utils.if_use_att(opt.caption_model)
-    loader = DataLoader(opt)
+    loader = DataLoader(opt, is_show=True)
     opt.vocab_size = loader.vocab_size
     opt.seq_length = loader.seq_length
 
@@ -46,9 +46,6 @@ def show(opt):
             for checkme in need_be_same:
                 assert vars(saved_model_opt)[checkme] == vars(opt)[checkme], "! Command line argument and saved model disagree on '%s' " % checkme
 
-    loader.iterators = infos.get('iterators', loader.iterators)
-    loader.split_ix = infos.get('split_ix', loader.split_ix)
-
     model = models.setup(opt)
     model.cuda()
     model.load_state_dict(torch.load(os.path.join(opt.start_from, 'model-best.pth')))
@@ -56,12 +53,13 @@ def show(opt):
     crit = utils.LanguageModelCriterion()
 
     # eval model
-    eval_kwargs = {'split': 'test',
-                    'dataset': opt.input_json,
-                    'language_eval': 0,
-                    'beam_size': 5,
-                    'print_all_beam': True}
+    eval_kwargs = {}
     eval_kwargs.update(vars(opt))
+    eval_kwargs.update({'split': 'show',
+                        'dataset': opt.input_json,
+                        'language_eval': 0,
+                        'beam_size': 5,
+                        'print_all_beam': True})
     val_loss, predictions, lang_stats = eval_utils.eval_split(model, crit, loader, eval_kwargs)
 
 

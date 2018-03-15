@@ -41,6 +41,7 @@ import torchvision.models as models
 from torch.autograd import Variable
 import skimage.io
 from skimage.transform import resize
+import time
 
 from torchvision import transforms as trn
 preprocess = trn.Compose([
@@ -74,10 +75,15 @@ def main(params):
 
     seen_fc_att_shape = False
 
+    last_time = time.time()
+
     for i, img in enumerate(imgs):
 
         if i % (len(imgs) // 100) == 0:
-            print('- processing %d/%d (%.2f%% done)' % (i, N, i * 100.0 / N))
+            now_time = time.time()
+            print('- processing %d/%d (%.2f%% done) time: %.2f' % (i, N, i * 100.0 / N, now_time - last_time))
+            last_time = now_time
+
 
         # check if dest. file exists
         if os.path.isfile(os.path.join(dir_fc, str(img['cocoid']) + '.npy')) \

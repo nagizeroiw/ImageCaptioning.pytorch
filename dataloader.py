@@ -35,7 +35,7 @@ class DataLoader(data.Dataset):
     def get_seq_length(self):
         return self.seq_length
 
-    def __init__(self, opt):
+    def __init__(self, opt, is_show=False):
         self.opt = opt
         self.batch_size = self.opt.batch_size
         self.seq_per_img = opt.seq_per_img
@@ -66,10 +66,22 @@ class DataLoader(data.Dataset):
         self.num_images = self.label_start_ix.shape[0]
         print('> read %d image labels' %(self.num_images))
 
+        if 'msvd' in opt.input_json:
+            show_ids = [27, 30, 45, 53, 90]
+        elif 'kuaishou' in opt.input_json:
+            show_ids = [1415, 430, 1483, 1581, 2086]
+        else:
+            show_ids = []
+
         # separate out indexes for each of the provided splits
         self.split_ix = {'train': [], 'val': [], 'test': [], 'show': []}
+
         for ix in range(len(self.info['images'])):
             img = self.info['images'][ix]
+
+            if is_show:
+                if img['id'] in show_ids:
+                    self.split_ix['show'].append(ix)
             if img['split'] == 'train':
                 self.split_ix['train'].append(ix)
             elif img['split'] == 'val':
