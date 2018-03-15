@@ -63,6 +63,11 @@ def build_vocab(imgs, params):
     print('> number of bad words: %d/%d = %.2f%%' %
           (len(bad_words), len(counts), len(bad_words) * 100.0 / len(counts)))
     print('> number of words in vocab would be %d' % (len(vocab), ))
+
+    print('>> saving word -> count dict for words in vocab...')
+    dic = {w: counts[w] for w in vocab}
+    json.dump(dic, open(params['output_vocab'], 'w'))
+
     print('> number of UNKs: %d/%d = %.2f%%' % (bad_count, total_words, bad_count * 100.0 / total_words))
 
     # lets look at the distribution of lengths as well
@@ -194,6 +199,7 @@ if __name__ == "__main__":
     parser.add_argument('--input_json', required=True, help='input json file to process into hdf5')
     parser.add_argument('--output_json', required=True, help='output json file')
     parser.add_argument('--output_h5', required=True, help='output h5 file')
+    parser.add_argument('--output_vocab', default='./vocab.json', help='json ouput file')
 
     # options
     parser.add_argument('--max_length', default=16, type=int,
