@@ -93,11 +93,11 @@ def eval_split(model, crit, loader, eval_kwargs={}):
 
         if data.get('labels', None) is not None:
             # forward the model to get loss
-            tmp = [data['fc_feats'], data['att_feats'], data['labels'], data['masks']]
+            tmp = [data['fc_feats'], data['att_feats'], data['labels'], data['masks'], data['attributes']]
             tmp = [Variable(torch.from_numpy(_), volatile=True).cuda() for _ in tmp]
-            fc_feats, att_feats, labels, masks = tmp
+            fc_feats, att_feats, labels, masks, attributes = tmp
 
-            loss = crit(model(fc_feats, att_feats, labels), labels[:,1:], masks[:,1:]).data[0]
+            loss = crit(model(fc_feats, att_feats, labels), labels[:,1:], masks[:,1:], attributes).data[0]
             loss_sum = loss_sum + loss
             loss_evals = loss_evals + 1
 
@@ -108,7 +108,7 @@ def eval_split(model, crit, loader, eval_kwargs={}):
         tmp = [Variable(torch.from_numpy(_), volatile=True).cuda() for _ in tmp]
         fc_feats, att_feats = tmp
         # forward the model to also get generated samples for each image
-        seq, prob = model.sample(fc_feats, att_feats, eval_kwargs)
+        seq, prob, attr = model.sample(fc_feats, att_feats, eval_kwargs)
 
         if print_all_beam is True:
             for p in xrange(seq.shape[0]):
@@ -153,8 +153,21 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                     print(cmd)
                     os.system(cmd)
 
+                this_attr = attr[k, :].data.cpu().numpy()
+                assert this_attr.shape == (1000,)
+
+                this_gt_attr = attributes[k * loader.seq_per_img, :].data.cpu().numpy()
+                gt_attr_indices = this_gt_attr.argsort()[-5:][::-1]
+
+                attr_indices = this_attr.argsort()[-5:][::-1]
+
+                gt_label = labels[k * loader.seq_per_img, 1:].data.cpu().numpy()
+
                 if verbose:
-                    print('video %s: %s' %(entry['image_id'], entry['caption']))
+                    print('video %s: %s' % (entry['image_id'], entry['caption']))
+                    print('   gt: %s' % ' '.join(([loader.ix_to_word[str(p)] for p in gt_label if p > 0])))
+                    print('   attr: %s' % (' '.join([loader.attr_idx2word[id] for id in attr_indices])))
+                    print('   gt labels: %s' % (' '.join([loader.attr_idx2word[id] for id in gt_attr_indices])))
 
         # if we wrapped around the split or used up val imgs budget then bail
         ix0 = data['bounds']['it_pos_now']

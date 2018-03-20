@@ -53,11 +53,11 @@ class LanguageModelCriterion(nn.Module):
 
         if not self.seen:
             print('> in LanguageModelCriterion.forward(input, target, mask):')
-            print('    pred_seq', pred_seq.shape)
-            print('    pred_attr', pred_attr.shape)
-            print('    target', target.shape)
-            print('    mask', mask.shape)
-            print('    attr', attr.shape)
+            print('    pred_seq', pred_seq.shape)  # (200, 17, 3562)
+            print('    pred_attr', pred_attr.shape)  # (200, 1000)
+            print('    target', target.shape)  # (200, 17)
+            print('    mask', mask.shape)  # (200, 17)
+            print('    attr', attr.shape)  # (200, 1000)
             self.seen = True
 
         # truncate to the same size
@@ -69,8 +69,12 @@ class LanguageModelCriterion(nn.Module):
         output = - pred_seq.gather(1, target) * mask
         output = torch.sum(output) / torch.sum(mask)
 
-        attr_loss = self.attr_cr(pred_attr, attr)
-        output = output + attr_loss * self.attr_weight
+        bsize = pred_attr.size(0)
+        pred_attr = to_contiguous(pred_attr)
+        attr = to_contiguous(attr.float())
+        attr_loss = torch.sum(torch.pow((pred_attr - attr), 2)) / bsize
+
+        output = output + self.attr_weight * attr_loss
 
         return output
 

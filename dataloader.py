@@ -48,6 +48,12 @@ class DataLoader(data.Dataset):
         self.ix_to_word = self.info['ix_to_word']
         self.vocab_size = len(self.ix_to_word)
         print('> vocab size is ', self.vocab_size)
+
+        print('> Dataloader loading json file for attribute: ', opt.input_attribute_json)
+        self.attribute_word2idx = json.load(open(opt.input_attribute_json))
+        self.attr_idx2word = {}
+        for w, id in self.attribute_word2idx.iteritems():
+            self.attr_idx2word[id] = w
         
         # open the hdf5 file
         print('> DataLoader loading h5 file: ', opt.input_fc_dir, opt.input_att_dir, opt.input_label_h5)
@@ -121,7 +127,7 @@ class DataLoader(data.Dataset):
         att_batch = [] # np.ndarray((batch_size * seq_per_img, 14, 14, self.opt.att_feat_size), dtype = 'float32')
         label_batch = np.zeros([batch_size * seq_per_img, self.seq_length + 2], dtype = 'int')
         mask_batch = np.zeros([batch_size * seq_per_img, self.seq_length + 2], dtype = 'float32')
-        attr_batch = np.zeros([batch_size * seq_per_img, self.attr_dim], dtype='int')
+        attr_batch = np.zeros([batch_size * seq_per_img, self.attr_dim], dtype='float32')
 
         wrapped = False
 

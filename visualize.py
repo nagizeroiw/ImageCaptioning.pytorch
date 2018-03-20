@@ -40,9 +40,17 @@ def main(params):
 
     a_vec = h5_attributes[vid]
     assert a_vec.shape == (1000,)
+
+    print(sum(a_vec))
+
     for i in range(a_vec.shape[0]):
         if a_vec[i] > 0:
             print('> %d\t%s' % (i, a_idx2word[i]))
+
+    indices = a_vec.argsort()[-5:][::-1]
+    print(' '.join([str(p) for p in indices]))
+
+    print(' '.join([a_idx2word[p] for p in indices]))
 
     for sent in video_dict['sentences']:
         # print(sent['raw'])

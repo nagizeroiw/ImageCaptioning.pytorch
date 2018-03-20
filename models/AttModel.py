@@ -115,17 +115,9 @@ class AttModel(CaptionModel):
             attr_predictions.append(attr_prediction)  # attr_prediction: (batch_size, attr_dim)
         if attr_predictions[0] is not None:
 
-            attr_predictions = torch.cat([_.unsqueeze(2) for _ in outputs], 2)  # (batch_size, attr_dim, max_seq_len)
-
-            ########################################
-            assert attr_predictions.shape == (batch_size, self.attr_dim, seq.size(1) - 1)
-            ########################################
+            attr_predictions = torch.cat([_.unsqueeze(2) for _ in attr_predictions], 2)  # (batch_size, attr_dim, max_seq_len)
 
             attr_predictions = torch.mean(attr_predictions, dim=2, keepdim=False)  # (batch_size, attr_dim)
-
-            ########################################
-            assert attr_predictions.shape == (batch_size, self.attr_dim)
-            ########################################
 
             return torch.cat([_.unsqueeze(1) for _ in outputs], 1), attr_predictions
         return torch.cat([_.unsqueeze(1) for _ in outputs], 1)  # (batch_size, max_seq_len, vocab_size)
@@ -134,7 +126,7 @@ class AttModel(CaptionModel):
         # 'it' is Variable contraining a word index
         xt = self.embed(it)
 
-        output, state = self.core(xt, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, state)
+        output, attr, state = self.core(xt, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, state)
         logprobs = F.log_softmax(self.logit(output), 1)
 
         return logprobs, state
@@ -186,10 +178,13 @@ class AttModel(CaptionModel):
             for i in range(len(self.done_beams[k])):
                 seq_all[:, i, k] = self.done_beams[k][i]['seq']
                 probs_all[:, i, k] = self.done_beams[k][i]['logps']
+
         # return the samples and their log likelihoods
         if opt.get('print_all_beam') is True:
             print('> print all beam')
             return seq_all.transpose(0, 2), probs_all.transpose(0, 2)
+        if attr_prediction is not None:
+            return seq.transpose(0, 1), seqLogprobs.transpose(0, 1), attr_prediction 
         return seq.transpose(0, 1), seqLogprobs.transpose(0, 1)
 
     def sample(self, fc_feats, att_feats, opt={}):
@@ -214,6 +209,7 @@ class AttModel(CaptionModel):
 
         seq = []
         seqLogprobs = []
+        attr_predictions = []
         for t in range(self.seq_length + 1):
             if t == 0: # input <bos>
                 it = fc_feats.data.new(batch_size).long().zero_()
@@ -252,7 +248,16 @@ class AttModel(CaptionModel):
                 output, state = core_output
                 attr_prediction = None
             logprobs = F.log_softmax(self.logit(output), 1)
+            attr_predictions.append(attr_prediction)
 
+        if attr_predictions[0] is not None:
+
+            attr_predictions = torch.cat([_.unsqueeze(2) for _ in attr_predictions], 2)
+            attr_prediction = torch.mean(attr_predictions, dim=2, keepdim=False)
+            assert attr_prediction.shape == (batch_size, self.attr_dim)
+
+            return torch.cat([_.unsqueeze(1) for _ in seq], 1), torch.cat([_.unsqueeze(1) for _ in seqLogprobs], 1), \
+                attr_prediction
         return torch.cat([_.unsqueeze(1) for _ in seq], 1), torch.cat([_.unsqueeze(1) for _ in seqLogprobs], 1)
 
 class AdaAtt_lstm(nn.Module):
@@ -419,12 +424,20 @@ class TopDownCore(nn.Module):
         super(TopDownCore, self).__init__()
         self.drop_prob_lm = opt.drop_prob_lm
         self.attr_dim = opt.attr_dim  # currently fixed
+        self.attr_as_lang_input = opt.attr_as_lang_input
 
         self.att_lstm = nn.LSTMCell(opt.input_encoding_size + opt.rnn_size * 2, opt.rnn_size) # we, fc, h^2_t-1
-        self.lang_lstm = nn.LSTMCell(opt.rnn_size * 2, opt.rnn_size) # h^1_t, \hat v
+
+        if self.attr_as_lang_input:
+            lang_lstm_input_size = opt.rnn_size * 2 + opt.attr_dim
+        else:
+            lang_lstm_input_size = opt.rnn_size * 2
+        self.lang_lstm = nn.LSTMCell(lang_lstm_input_size, opt.rnn_size) # h^1_t, \hat v
         self.attention = Attention(opt)
 
-        self.attention2attribute = nn.Linear(self.rnn_size, self.attr_dim)
+        self.attention2attribute = nn.Sequential(nn.Dropout(self.drop_prob_lm),
+                                                 nn.Linear(opt.rnn_size, self.attr_dim),
+                                                 nn.Tanh())
 
     def forward(self, xt, fc_feats, att_feats, p_att_feats, state):
         prev_h = state[0][-1]  # (batch_size, rnn_size)
@@ -437,11 +450,10 @@ class TopDownCore(nn.Module):
         # get attribute detector results (prediction)
         attr_prediction = self.attention2attribute(att)  # (batch_size, attr_dim(=1000))
 
-        #############################################################
-        assert attr_prediction.shape == (att.shape[0], self.attr_dim)
-        #############################################################
-
-        lang_lstm_input = torch.cat([att, h_att], 1)  # (batch_size, 2 * rnn_size)
+        if self.attr_as_lang_input:
+            lang_lstm_input = torch.cat([att, h_att, attr_prediction], 1)  # (batch_size, 2 * rnn_size + attr_dim)
+        else:
+            lang_lstm_input = torch.cat([att, h_att], 1)  # (batch_size, 2 * rnn_size)
         # lang_lstm_input = torch.cat([att, F.dropout(h_att, self.drop_prob_lm, self.training)], 1) ?????
 
         h_lang, c_lang = self.lang_lstm(lang_lstm_input, (state[0][1], state[1][1]))  # (batch_size, rnn_size)

@@ -15,6 +15,8 @@ def parse_opt():
     parser.add_argument('--input_label_h5', type=str, default='data/coco_label.h5',
                     help='path to the h5file containing the preprocessed dataset')
 
+    parser.add_argument('--input_attribute_json', type=str, default='', help='path to the attribute_word2idx json file')
+
     parser.add_argument('--start_from', type=str, default=None,
                     help="""continue training from saved model at this path. Path must contain files saved by previous training process: 
                         'infos.pkl'         : configuration;
@@ -38,6 +40,10 @@ def parse_opt():
                     help='rnn, gru, or lstm')
 
     parser.add_argument('--attr_dim', type=int, default=1000, help='attribute dimension (currently fixed to 1000)')
+
+    parser.add_argument('--attr_weight', type=float, default=0.01, help='weight on attribute loss term')
+
+    parser.add_argument('--attr_as_lang_input', type=bool, default=False, help='whether concate attribute prediction results into Language LSTM (whether hard attribute)')
 
     parser.add_argument('--input_encoding_size', type=int, default=512,
                     help='the encoding size of each token in the vocabulary, and the image.')

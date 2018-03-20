@@ -75,7 +75,7 @@ def train(opt):
     # Assure in training mode
     model.train()
 
-    crit = utils.LanguageModelCriterion()
+    crit = utils.LanguageModelCriterion(attr_weight=opt.attr_weight)
 
     optimizer = optim.Adam(model.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
 
@@ -147,8 +147,7 @@ def train(opt):
         if (iteration % opt.save_checkpoint_every == 0):
             # eval model
             eval_kwargs = {'split': 'test',
-                            'dataset': opt.input_json,
-                            'verbal': False}
+                            'dataset': opt.input_json}
             eval_kwargs.update(vars(opt))
             val_loss, predictions, lang_stats = eval_utils.eval_split(model, crit, loader, eval_kwargs)
 

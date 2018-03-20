@@ -134,7 +134,7 @@ def encode_captions(imgs, params, wtoi, word2idx):
     label_start_ix = np.zeros(N, dtype='uint32')  # note: these will be one-indexed
     label_end_ix = np.zeros(N, dtype='uint32')
     label_length = np.zeros(M, dtype='uint32')
-    label_attribute = np.zeros((N, params['attribute_size']), dtype='uint32')
+    label_attribute = np.zeros((N, params['attribute_size']), dtype='float')
 
     caption_counter = 0
     counter = 1
@@ -153,7 +153,12 @@ def encode_captions(imgs, params, wtoi, word2idx):
                 if k < max_length:
                     Li[j, k] = wtoi[w]
                     if w in word2idx:
-                        label_attribute[i, word2idx[w]] = 1
+                        label_attribute[i, word2idx[w]] += 1.
+
+        # normalize
+        if np.sum(label_attribute[i, :]) > 0:
+            label_attribute[i, :] /= np.sum(label_attribute[i, :])
+            assert abs(np.sum(label_attribute[i, :]) - 1) < 1e-5
 
         # note: word indices are 1-indexed, and captions are padded with zeros
         label_arrays.append(Li)
@@ -161,6 +166,8 @@ def encode_captions(imgs, params, wtoi, word2idx):
         label_end_ix[i] = counter + n - 1
 
         counter += n
+
+    print(np.sum(label_attribute, axis=1)[:20])
 
     L = np.concatenate(label_arrays, axis=0)  # put all the labels together
     assert L.shape[0] == M, '! lengths don\'t match? that\'s weird'
@@ -193,7 +200,7 @@ def main(params):
     f_lb.create_dataset("label_start_ix", dtype='uint32', data=label_start_ix)
     f_lb.create_dataset("label_end_ix", dtype='uint32', data=label_end_ix)
     f_lb.create_dataset("label_length", dtype='uint32', data=label_length)
-    f_lb.create_dataset("label_attribute", dtype='uint32', data=label_attribute)
+    f_lb.create_dataset("label_attribute", dtype='float', data=label_attribute)
     f_lb.close()
 
     # create output json file
