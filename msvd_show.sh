@@ -7,4 +7,4 @@ python show.py --id $ID --caption_model topdown --start_from ./log_$ID \
     --scheduled_sampling_start 0 \
     --checkpoint_path log_$ID --save_checkpoint_every 1500 \
     --cmd_log_every 100 \
-    --val_images_use 670 --max_epochs 400
+    --val_images_use 5 --max_epochs 400 --language_eval 0 --beam_size 5

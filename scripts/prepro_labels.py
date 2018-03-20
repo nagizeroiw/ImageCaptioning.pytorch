@@ -63,6 +63,29 @@ def build_vocab(imgs, params):
     print('> number of bad words: %d/%d = %.2f%%' %
           (len(bad_words), len(counts), len(bad_words) * 100.0 / len(counts)))
     print('> number of words in vocab would be %d' % (len(vocab), ))
+
+    print('>> reading stopwords')
+    stop = []
+    with open(params['stopwords_file'], 'r') as stopwords:
+        for line in stopwords.readlines():
+            stop.extend(line.replace('\r', '').replace('\n', '').split(' '))
+    print('>> number of stopwords: %d' % len(stop))
+    print(stop[:20])
+
+    # print('>> saving word -> count dict for words in vocab...')
+    dic = {w: counts[w] for w in vocab if w not in stop}
+    # json.dump(dic, open(params['output_vocab'], 'w'))
+
+    print('>> non-stop words in vocab: %d' % len(dic))
+    cw = sorted([(count, w) for w, count in dic.items()], reverse=True)
+    print('> top words in vocab and their counts:')
+    print('\n'.join(map(str, cw[:20])))
+    attr_words = cw[:min(params['attribute_size'], len(cw))]
+    attr_words = [w for c, w in attr_words]
+
+    word2idx = {w: i for i, w in enumerate(attr_words)}
+    json.dump(word2idx, open(params['output_vocab'], 'w'))
+
     print('> number of UNKs: %d/%d = %.2f%%' % (bad_count, total_words, bad_count * 100.0 / total_words))
 
     # lets look at the distribution of lengths as well
@@ -92,10 +115,10 @@ def build_vocab(imgs, params):
             caption = [w if counts.get(w, 0) > count_thr else 'UNK' for w in txt]
             img['final_captions'].append(caption)
 
-    return vocab
+    return vocab, word2idx
 
 
-def encode_captions(imgs, params, wtoi):
+def encode_captions(imgs, params, wtoi, word2idx):
     """ 
     encode all captions into one large array, which will be 1-indexed.
     also produces label_start_ix and label_end_ix which store 1-indexed 
@@ -111,6 +134,8 @@ def encode_captions(imgs, params, wtoi):
     label_start_ix = np.zeros(N, dtype='uint32')  # note: these will be one-indexed
     label_end_ix = np.zeros(N, dtype='uint32')
     label_length = np.zeros(M, dtype='uint32')
+    label_attribute = np.zeros((N, params['attribute_size']), dtype='uint32')
+
     caption_counter = 0
     counter = 1
     for i, img in enumerate(imgs):
@@ -127,6 +152,8 @@ def encode_captions(imgs, params, wtoi):
             for k, w in enumerate(s):
                 if k < max_length:
                     Li[j, k] = wtoi[w]
+                    if w in word2idx:
+                        label_attribute[i, word2idx[w]] = 1
 
         # note: word indices are 1-indexed, and captions are padded with zeros
         label_arrays.append(Li)
@@ -140,7 +167,8 @@ def encode_captions(imgs, params, wtoi):
     assert np.all(label_length > 0), '! error: some caption had no words?'
 
     print('> encoded captions to array of size ', L.shape)
-    return L, label_start_ix, label_end_ix, label_length
+    print('>> encoded attributes to array of size', label_attribute.shape)
+    return L, label_start_ix, label_end_ix, label_length, label_attribute
 
 
 def main(params):
@@ -151,12 +179,12 @@ def main(params):
     seed(123)  # make reproducible
 
     # create the vocab
-    vocab = build_vocab(imgs, params)
+    vocab, word2idx = build_vocab(imgs, params)
     itow = {i + 1: w for i, w in enumerate(vocab)}  # a 1-indexed vocab translation table
     wtoi = {w: i + 1 for i, w in enumerate(vocab)}  # inverse table
 
     # encode captions in large arrays, ready to ship to hdf5 file
-    L, label_start_ix, label_end_ix, label_length = encode_captions(imgs, params, wtoi)
+    L, label_start_ix, label_end_ix, label_length, label_attribute = encode_captions(imgs, params, wtoi, word2idx)
 
     # create output h5 file
     N = len(imgs)
@@ -165,6 +193,7 @@ def main(params):
     f_lb.create_dataset("label_start_ix", dtype='uint32', data=label_start_ix)
     f_lb.create_dataset("label_end_ix", dtype='uint32', data=label_end_ix)
     f_lb.create_dataset("label_length", dtype='uint32', data=label_length)
+    f_lb.create_dataset("label_attribute", dtype='uint32', data=label_attribute)
     f_lb.close()
 
     # create output json file
@@ -194,8 +223,11 @@ if __name__ == "__main__":
     parser.add_argument('--input_json', required=True, help='input json file to process into hdf5')
     parser.add_argument('--output_json', required=True, help='output json file')
     parser.add_argument('--output_h5', required=True, help='output h5 file')
+    parser.add_argument('--output_vocab', default='./attribute_word2idx.json', help='json ouput file for attribute word2idx')
+    parser.add_argument('--stopwords_file', default='./data/stopwords.txt', help='stopwords')
 
     # options
+    parser.add_argument('--attribute_size', default=1000, type=int, help='number of attributes(words)')
     parser.add_argument('--max_length', default=16, type=int,
                         help='max length of a caption, in number of words. captions longer than this get clipped.')
     parser.add_argument('--word_count_threshold', default=5, type=int,

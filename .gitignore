@@ -7,6 +7,6 @@ eval_*
 
 *.pyc
 *.pkl
-
+*.json
 sync.sh
 
