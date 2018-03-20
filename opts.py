@@ -37,6 +37,8 @@ def parse_opt():
     parser.add_argument('--rnn_type', type=str, default='lstm',
                     help='rnn, gru, or lstm')
 
+    parser.add_argument('--attr_dim', type=int, default=1000, help='attribute dimension (currently fixed to 1000)')
+
     parser.add_argument('--input_encoding_size', type=int, default=512,
                     help='the encoding size of each token in the vocabulary, and the image.')
 
@@ -98,6 +100,8 @@ def parse_opt():
     parser.add_argument('--weight_decay', type=float, default=0,
                     help='weight_decay')
 
+
+    parser.add_argument('--scheduled_sampling_init_rate', type=float, default=0)
 
     parser.add_argument('--scheduled_sampling_start', type=int, default=-1, 
                     help='at what iteration to start decay gt probability')

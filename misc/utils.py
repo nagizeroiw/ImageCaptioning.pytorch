@@ -37,18 +37,40 @@ def to_contiguous(tensor):
         return tensor.contiguous()
 
 class LanguageModelCriterion(nn.Module):
-    def __init__(self):
+    def __init__(self, attr_weight=0.01):
         super(LanguageModelCriterion, self).__init__()
+        self.seen = False
+        self.attr_cr = nn.CrossEntropyLoss()
+        self.attr_weight = attr_weight
 
-    def forward(self, input, target, mask):
+    def forward(self, model_output, target, mask, attr):
+
+        pred_seq, pred_attr = model_output
+
+        # input (from model.forward())      (batch_size, max_seq_len, vocab_size)
+        # target (from dataloader->labels)  (batch_size, max_seq_len)
+        # mask (from dataloader->masks)     (batch_size, max_seq_len)
+
+        if not self.seen:
+            print('> in LanguageModelCriterion.forward(input, target, mask):')
+            print('    pred_seq', pred_seq.shape)
+            print('    pred_attr', pred_attr.shape)
+            print('    target', target.shape)
+            print('    mask', mask.shape)
+            print('    attr', attr.shape)
+            self.seen = True
+
         # truncate to the same size
-        target = target[:, :input.size(1)]
-        mask =  mask[:, :input.size(1)]
-        input = to_contiguous(input).view(-1, input.size(2))
+        target = target[:, :pred_seq.size(1)]
+        mask =  mask[:, :pred_seq.size(1)]
+        pred_seq = to_contiguous(pred_seq).view(-1, pred_seq.size(2))
         target = to_contiguous(target).view(-1, 1)
         mask = to_contiguous(mask).view(-1, 1)
-        output = - input.gather(1, target) * mask
+        output = - pred_seq.gather(1, target) * mask
         output = torch.sum(output) / torch.sum(mask)
+
+        attr_loss = self.attr_cr(pred_attr, attr)
+        output = output + attr_loss * self.attr_weight
 
         return output
 

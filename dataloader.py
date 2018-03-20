@@ -39,6 +39,7 @@ class DataLoader(data.Dataset):
         self.opt = opt
         self.batch_size = self.opt.batch_size
         self.seq_per_img = opt.seq_per_img
+        self.attr_dim = opt.attr_dim  # currently fixed
         self.use_att = getattr(opt, 'use_att', True)
 
         # load the json file which contains additional information about the dataset
@@ -60,8 +61,9 @@ class DataLoader(data.Dataset):
         self.seq_length = seq_size[1]
         print('> max sequence length in data is', self.seq_length)
         # load the pointers in full to RAM (should be small enough)
-        self.label_start_ix = self.h5_label_file['label_start_ix'][:]
-        self.label_end_ix = self.h5_label_file['label_end_ix'][:]
+        self.label_start_ix = self.h5_label_file['label_start_ix'][:] # shape (N, )
+        self.label_end_ix = self.h5_label_file['label_end_ix'][:]  # shape (N, )
+        self.label_attr = self.h5_label_file['label_attribute'][:]  # shape (N, attr_dim (1000))
 
         self.num_images = self.label_start_ix.shape[0]
         print('> read %d image labels' %(self.num_images))
@@ -119,6 +121,7 @@ class DataLoader(data.Dataset):
         att_batch = [] # np.ndarray((batch_size * seq_per_img, 14, 14, self.opt.att_feat_size), dtype = 'float32')
         label_batch = np.zeros([batch_size * seq_per_img, self.seq_length + 2], dtype = 'int')
         mask_batch = np.zeros([batch_size * seq_per_img, self.seq_length + 2], dtype = 'float32')
+        attr_batch = np.zeros([batch_size * seq_per_img, self.attr_dim], dtype='int')
 
         wrapped = False
 
@@ -156,6 +159,15 @@ class DataLoader(data.Dataset):
             
             label_batch[i * seq_per_img : (i + 1) * seq_per_img, 1 : self.seq_length + 1] = seq
 
+            # get attribute vector for this image
+            this_attr = self.label_attr[ix][:]
+            assert this_attr.shape == (self.attr_dim, )
+
+            dupli_attr = np.tile(this_attr, (seq_per_img, 1))
+            assert dupli_attr.shape == (seq_per_img, self.attr_dim)
+
+            attr_batch[i * seq_per_img : (i + 1) * seq_per_img, :] = dupli_attr
+
             if tmp_wrapped:
                 wrapped = True
 
@@ -174,7 +186,7 @@ class DataLoader(data.Dataset):
             #print(i, time.time() - t_start)
 
         # generate mask
-        t_start = time.time()
+        # t_start = time.time()
         nonzeros = np.array(list(map(lambda x: (x != 0).sum()+2, label_batch)))
         for ix, row in enumerate(mask_batch):
             row[:nonzeros[ix]] = 1
@@ -184,6 +196,7 @@ class DataLoader(data.Dataset):
         data['fc_feats'] = np.stack(fc_batch)
         data['att_feats'] = np.stack(att_batch)
         data['labels'] = label_batch
+        data['attributes'] = attr_batch
         data['gts'] = gts
         data['masks'] = mask_batch 
         data['bounds'] = {'it_pos_now': self.iterators[split], 'it_max': len(self.split_ix[split]), 'wrapped': wrapped}

@@ -28,6 +28,7 @@ class AttModel(CaptionModel):
     def __init__(self, opt):
         super(AttModel, self).__init__()
         self.vocab_size = opt.vocab_size
+        self.attr_dim = opt.attr_dim
         self.input_encoding_size = opt.input_encoding_size
         #self.rnn_type = opt.rnn_type
         self.rnn_size = opt.rnn_size
@@ -68,6 +69,7 @@ class AttModel(CaptionModel):
         # state[0|1] (n_layers, n_batch, rnn_size) -> LSTM[h|c]
 
         outputs = []
+        attr_predictions = []
 
         # embed fc and att feats
         fc_feats = self.fc_embed(fc_feats)  # (n_batch, rnn_size)
@@ -102,10 +104,30 @@ class AttModel(CaptionModel):
 
             xt = self.embed(it)  # (batch_size, input_encoding_size) -> input of this time-step
 
-            output, state = self.core(xt, fc_feats, att_feats, p_att_feats, state)
+            core_output = self.core(xt, fc_feats, att_feats, p_att_feats, state)
+            if len(core_output) == 3:
+                output, attr_prediction, state = core_output
+            else:
+                output, state = core_output
+                attr_prediction = None
             output = F.log_softmax(self.logit(output), 1)  # (batch_size, vocab_size)
             outputs.append(output)
+            attr_predictions.append(attr_prediction)  # attr_prediction: (batch_size, attr_dim)
+        if attr_predictions[0] is not None:
 
+            attr_predictions = torch.cat([_.unsqueeze(2) for _ in outputs], 2)  # (batch_size, attr_dim, max_seq_len)
+
+            ########################################
+            assert attr_predictions.shape == (batch_size, self.attr_dim, seq.size(1) - 1)
+            ########################################
+
+            attr_predictions = torch.mean(attr_predictions, dim=2, keepdim=False)  # (batch_size, attr_dim)
+
+            ########################################
+            assert attr_predictions.shape == (batch_size, self.attr_dim)
+            ########################################
+
+            return torch.cat([_.unsqueeze(1) for _ in outputs], 1), attr_predictions
         return torch.cat([_.unsqueeze(1) for _ in outputs], 1)  # (batch_size, max_seq_len, vocab_size)
 
     def get_logprobs_state(self, it, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, state):
@@ -150,7 +172,12 @@ class AttModel(CaptionModel):
                     it = fc_feats.data.new(beam_size).long().zero_()
                     xt = self.embed(Variable(it, requires_grad=False))
 
-                output, state = self.core(xt, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, state)
+                core_output = self.core(xt, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, state)
+                if len(core_output) == 3:
+                    output, attr_prediction, state = core_output
+                else:
+                    output, state = core_output
+                    attr_prediction = None
                 logprobs = F.log_softmax(self.logit(output), 1)
 
             self.done_beams[k] = self.beam_search(state, logprobs, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, opt=opt)
@@ -218,8 +245,13 @@ class AttModel(CaptionModel):
 
                 seqLogprobs.append(sampleLogprobs.view(-1))
 
-            output, state = self.core(xt, fc_feats, att_feats, p_att_feats, state)
-            logprobs = F.log_softmax(self.logit(output))
+            core_output = self.core(xt, fc_feats, att_feats, p_att_feats, state)
+            if len(core_output) == 3:
+                output, attr_prediction, state = core_output
+            else:
+                output, state = core_output
+                attr_prediction = None
+            logprobs = F.log_softmax(self.logit(output), 1)
 
         return torch.cat([_.unsqueeze(1) for _ in seq], 1), torch.cat([_.unsqueeze(1) for _ in seqLogprobs], 1)
 
@@ -386,10 +418,13 @@ class TopDownCore(nn.Module):
     def __init__(self, opt, use_maxout=False):
         super(TopDownCore, self).__init__()
         self.drop_prob_lm = opt.drop_prob_lm
+        self.attr_dim = opt.attr_dim  # currently fixed
 
         self.att_lstm = nn.LSTMCell(opt.input_encoding_size + opt.rnn_size * 2, opt.rnn_size) # we, fc, h^2_t-1
         self.lang_lstm = nn.LSTMCell(opt.rnn_size * 2, opt.rnn_size) # h^1_t, \hat v
         self.attention = Attention(opt)
+
+        self.attention2attribute = nn.Linear(self.rnn_size, self.attr_dim)
 
     def forward(self, xt, fc_feats, att_feats, p_att_feats, state):
         prev_h = state[0][-1]  # (batch_size, rnn_size)
@@ -399,6 +434,13 @@ class TopDownCore(nn.Module):
 
         att = self.attention(h_att, att_feats, p_att_feats)  # (batch_size, att_feat_size(=rnn_size))
 
+        # get attribute detector results (prediction)
+        attr_prediction = self.attention2attribute(att)  # (batch_size, attr_dim(=1000))
+
+        #############################################################
+        assert attr_prediction.shape == (att.shape[0], self.attr_dim)
+        #############################################################
+
         lang_lstm_input = torch.cat([att, h_att], 1)  # (batch_size, 2 * rnn_size)
         # lang_lstm_input = torch.cat([att, F.dropout(h_att, self.drop_prob_lm, self.training)], 1) ?????
 
@@ -407,7 +449,7 @@ class TopDownCore(nn.Module):
         output = F.dropout(h_lang, self.drop_prob_lm, self.training)  # (batch_size, rnn_size)
         state = (torch.stack([h_att, h_lang]), torch.stack([c_att, c_lang]))
 
-        return output, state
+        return output, attr_prediction, state
 
 class Attention(nn.Module):
     def __init__(self, opt):

@@ -97,7 +97,7 @@ def train(opt):
             # Assign the scheduled sampling prob
             if epoch > opt.scheduled_sampling_start and opt.scheduled_sampling_start >= 0:
                 frac = (epoch - opt.scheduled_sampling_start) // opt.scheduled_sampling_increase_every
-                opt.ss_prob = min(opt.scheduled_sampling_increase_prob * frac, opt.scheduled_sampling_max_prob)
+                opt.ss_prob = min(opt.scheduled_sampling_init_rate + opt.scheduled_sampling_increase_prob * frac, opt.scheduled_sampling_max_prob)
                 model.ss_prob = opt.ss_prob
             update_lr_flag = False
 
@@ -108,12 +108,12 @@ def train(opt):
 
         torch.cuda.synchronize()
 
-        tmp = [data['fc_feats'], data['att_feats'], data['labels'], data['masks']]
+        tmp = [data['fc_feats'], data['att_feats'], data['labels'], data['masks'], data['attributes']]
         tmp = [Variable(torch.from_numpy(_), requires_grad=False).cuda() for _ in tmp]
-        fc_feats, att_feats, labels, masks = tmp
+        fc_feats, att_feats, labels, masks, attributes = tmp
 
         optimizer.zero_grad()
-        loss = crit(model(fc_feats, att_feats, labels), labels[:,1:], masks[:,1:])
+        loss = crit(model(fc_feats, att_feats, labels), labels[:,1:], masks[:,1:], attributes)
         loss.backward()
         utils.clip_gradient(optimizer, opt.grad_clip)
         optimizer.step()
