@@ -72,7 +72,7 @@ class LanguageModelCriterion(nn.Module):
         bsize = pred_attr.size(0)
         pred_attr = to_contiguous(pred_attr)
         attr = to_contiguous(attr.float())
-        attr_loss = torch.sum(torch.pow((pred_attr - attr), 2)) / bsize
+        attr_loss = torch.pow(torch.sum(torch.pow((pred_attr - attr), 2)), 0.5) / bsize
 
         output = output + self.attr_weight * attr_loss
 
