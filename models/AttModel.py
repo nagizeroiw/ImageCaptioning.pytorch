@@ -53,7 +53,7 @@ class AttModel(CaptionModel):
         self.logit = nn.Linear(self.rnn_size, self.vocab_size + 1)
         self.ctx2att = nn.Linear(self.rnn_size, self.att_hid_size)
 
-        self.fc2attr = nn.Sequential(nn.Linear(self.fc_feat_size, self.attr_dim))
+        # self.fc2attr = nn.Sequential(nn.Linear(self.fc_feat_size, self.attr_dim))
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).data
@@ -73,8 +73,8 @@ class AttModel(CaptionModel):
         outputs = []
         attr_predictions = []
 
-        attr_lang = self.fc2attr(fc_feats)  # (n_batch, attr_dim)
-        attr_lang = F.softmax(attr_lang, dim=1)  # (n_batch, attr_dim)
+        # attr_lang = self.fc2attr(fc_feats)  # (n_batch, attr_dim)
+        # attr_lang = F.softmax(attr_lang, dim=1)  # (n_batch, attr_dim)
 
         # embed fc and att feats
         fc_feats = self.fc_embed(fc_feats)  # (n_batch, rnn_size)
@@ -125,7 +125,7 @@ class AttModel(CaptionModel):
             attr_predictions = torch.mean(attr_predictions, dim=2, keepdim=False)  # (batch_size, attr_dim)
 
             return torch.cat([_.unsqueeze(1) for _ in outputs], 1), attr_predictions
-        return torch.cat([_.unsqueeze(1) for _ in outputs], 1), attr_lang  # (batch_size, max_seq_len, vocab_size)
+        return torch.cat([_.unsqueeze(1) for _ in outputs], 1)  #, attr_lang  # (batch_size, max_seq_len, vocab_size)
 
     def get_logprobs_state(self, it, tmp_fc_feats, tmp_att_feats, tmp_p_att_feats, state):
         # 'it' is Variable contraining a word index
@@ -141,8 +141,8 @@ class AttModel(CaptionModel):
         batch_size = fc_feats.size(0)
         print('> sample_beam print_all_beam', opt.get('print_all_beam'))
 
-        attr_lang = self.fc2attr(fc_feats)  # (n_batch, attr_dim)
-        attr_lang = F.softmax(attr_lang, dim=1)  # (n_batch, attr_dim)
+        # attr_lang = self.fc2attr(fc_feats)  # (n_batch, attr_dim)
+        # attr_lang = F.softmax(attr_lang, dim=1)  # (n_batch, attr_dim)
 
         # embed fc and att feats
         fc_feats = self.fc_embed(fc_feats)
@@ -193,7 +193,7 @@ class AttModel(CaptionModel):
             return seq_all.transpose(0, 2), probs_all.transpose(0, 2)
         if attr_prediction is not None:
             return seq.transpose(0, 1), seqLogprobs.transpose(0, 1), attr_prediction 
-        return seq.transpose(0, 1), seqLogprobs.transpose(0, 1), attr_lang
+        return seq.transpose(0, 1), seqLogprobs.transpose(0, 1)  #, attr_lang
 
     def sample(self, fc_feats, att_feats, opt={}):
         sample_max = opt.get('sample_max', 1)
