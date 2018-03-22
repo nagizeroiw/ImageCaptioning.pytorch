@@ -141,8 +141,8 @@ class AttModel(CaptionModel):
         batch_size = fc_feats.size(0)
         print('> sample_beam print_all_beam', opt.get('print_all_beam'))
 
-        # attr_lang = self.fc2attr(fc_feats)  # (n_batch, attr_dim)
-        # attr_lang = F.softmax(attr_lang, dim=1)  # (n_batch, attr_dim)
+        attr_lang = self.fc2attr(fc_feats)  # (n_batch, attr_dim)
+        attr_lang = F.softmax(attr_lang, dim=1)  # (n_batch, attr_dim)
 
         # embed fc and att feats
         fc_feats = self.fc_embed(fc_feats)
