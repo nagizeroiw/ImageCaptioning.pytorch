@@ -435,11 +435,11 @@ class TopDownCore(nn.Module):
         self.lang_lstm = nn.LSTMCell(lang_lstm_input_size, opt.rnn_size) # h^1_t, \hat v
         self.attention = Attention(opt)
 
-        self.attention2attribute = nn.Sequential(nn.Linear(opt.rnn_size, opt.rnn_size * 2),
-                                                 nn.Linear(opt.rnn_size * 2, self.attr_dim),
-                                                 nn.ReLU())
+        self.attention2attribute = nn.Sequential(nn.Linear(opt.rnn_size, self.attr_dim))
 
-        self.attr2lang = nn.Linear(self.attr_dim, opt.rnn_size)
+        self.attr2lang = nn.Sequential(nn.Linear(self.attr_dim, opt.rnn_size),
+                                       nn.ReLU(),
+                                       nn.Dropout(opt.drop_prob_lm))
 
     def forward(self, xt, fc_feats, att_feats, p_att_feats, state):
         prev_h = state[0][-1]  # (batch_size, rnn_size)
@@ -460,7 +460,6 @@ class TopDownCore(nn.Module):
             lang_lstm_input = torch.cat([att, h_att, attr_lang], 1)  # (batch_size, 2 * rnn_size + rnn_size)
         else:
             lang_lstm_input = torch.cat([att, h_att], 1)  # (batch_size, 2 * rnn_size)
-        # lang_lstm_input = torch.cat([att, F.dropout(h_att, self.drop_prob_lm, self.training)], 1) ?????
 
         h_lang, c_lang = self.lang_lstm(lang_lstm_input, (state[0][1], state[1][1]))  # (batch_size, rnn_size)
 
