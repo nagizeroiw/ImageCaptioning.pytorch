@@ -435,7 +435,8 @@ class TopDownCore(nn.Module):
         self.lang_lstm = nn.LSTMCell(lang_lstm_input_size, opt.rnn_size) # h^1_t, \hat v
         self.attention = Attention(opt)
 
-        self.attention2attribute = nn.Sequential(nn.Linear(opt.rnn_size, self.attr_dim))
+        self.attention2attribute = nn.Sequential(nn.Linear(opt.rnn_size, self.attr_dim),
+                                                 nn.Tanh())
 
         self.attr2lang = nn.Sequential(nn.Linear(self.attr_dim, opt.rnn_size),
                                        nn.ReLU(),
@@ -451,7 +452,6 @@ class TopDownCore(nn.Module):
 
         # get attribute detector results (prediction)
         attr_prediction = self.attention2attribute(att)  # (batch_size, attr_dim(=1000))
-        attr_prediction = F.softmax(attr_prediction, 1)
 
         # embedded attribute prediction results -> as language LSTM input
         attr_lang = self.attr2lang(attr_prediction)  # (batch_size, rnn_size(=512?))
