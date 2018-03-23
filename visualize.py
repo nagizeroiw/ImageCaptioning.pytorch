@@ -39,7 +39,7 @@ def main(params):
         print('%s\t%s' % (attr, video_dict[attr]))
 
     a_vec = h5_attributes[vid]
-    assert a_vec.shape == (1000,)
+    assert a_vec.shape == (500,)
 
     print(sum(a_vec))
 
