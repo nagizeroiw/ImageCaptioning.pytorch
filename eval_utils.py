@@ -154,7 +154,7 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                     os.system(cmd)
 
                 this_attr = attr[k, :].data.cpu().numpy()
-                assert this_attr.shape == (1000,)
+                assert this_attr.shape == (eval_kwargs['attr_dim'],)
 
                 this_gt_attr = attributes[k * loader.seq_per_img, :].data.cpu().numpy()
                 gt_attr_indices = this_gt_attr.argsort()[-5:][::-1]
