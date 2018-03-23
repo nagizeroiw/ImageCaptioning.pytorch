@@ -39,7 +39,7 @@ def parse_opt():
     parser.add_argument('--rnn_type', type=str, default='lstm',
                     help='rnn, gru, or lstm')
 
-    parser.add_argument('--attr_dim', type=int, default=1000, help='attribute dimension (currently fixed to 1000)')
+    parser.add_argument('--attr_dim', type=int, default=500, help='attribute dimension (currently fixed to 1000)')
 
     parser.add_argument('--attr_weight', type=float, default=0.01, help='weight on attribute loss term')
 

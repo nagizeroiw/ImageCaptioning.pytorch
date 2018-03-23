@@ -234,7 +234,7 @@ if __name__ == "__main__":
     parser.add_argument('--stopwords_file', default='./data/stopwords.txt', help='stopwords')
 
     # options
-    parser.add_argument('--attribute_size', default=1000, type=int, help='number of attributes(words)')
+    parser.add_argument('--attribute_size', default=500, type=int, help='number of attributes(words)')
     parser.add_argument('--max_length', default=16, type=int,
                         help='max length of a caption, in number of words. captions longer than this get clipped.')
     parser.add_argument('--word_count_threshold', default=5, type=int,

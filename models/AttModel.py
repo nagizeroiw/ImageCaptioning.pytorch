@@ -429,7 +429,7 @@ class TopDownCore(nn.Module):
         self.att_lstm = nn.LSTMCell(opt.input_encoding_size + opt.rnn_size * 2, opt.rnn_size) # we, fc, h^2_t-1
 
         if self.attr_as_lang_input:
-            lang_lstm_input_size = opt.rnn_size * 2 + opt.rnn_size
+            lang_lstm_input_size = opt.rnn_size * 2 + opt.attr_dim
         else:
             lang_lstm_input_size = opt.rnn_size * 2
         self.lang_lstm = nn.LSTMCell(lang_lstm_input_size, opt.rnn_size) # h^1_t, \hat v
@@ -438,9 +438,6 @@ class TopDownCore(nn.Module):
         self.attention2attribute = nn.Sequential(nn.Linear(opt.rnn_size, self.attr_dim),
                                                  nn.Tanh())
 
-        self.attr2lang = nn.Sequential(nn.Linear(self.attr_dim, opt.rnn_size),
-                                       nn.ReLU(),
-                                       nn.Dropout(opt.drop_prob_lm))
 
     def forward(self, xt, fc_feats, att_feats, p_att_feats, state):
         prev_h = state[0][-1]  # (batch_size, rnn_size)
@@ -454,10 +451,10 @@ class TopDownCore(nn.Module):
         attr_prediction = self.attention2attribute(att)  # (batch_size, attr_dim(=1000))
 
         # embedded attribute prediction results -> as language LSTM input
-        attr_lang = self.attr2lang(attr_prediction)  # (batch_size, rnn_size(=512?))
+        attr_lang = attr_prediction  # (batch_size, attr_dim)
 
         if self.attr_as_lang_input:
-            lang_lstm_input = torch.cat([att, h_att, attr_lang], 1)  # (batch_size, 2 * rnn_size + rnn_size)
+            lang_lstm_input = torch.cat([att, h_att, attr_lang], 1)  # (batch_size, 2 * rnn_size + attr_dim)
         else:
             lang_lstm_input = torch.cat([att, h_att], 1)  # (batch_size, 2 * rnn_size)
 
