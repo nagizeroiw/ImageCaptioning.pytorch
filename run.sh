@@ -1,5 +1,5 @@
 ID=hard_attr4
-CUDA_VISIBLE_DEVICES=0 python train.py --id $ID --caption_model topdown \
+CUDA_VISIBLE_DEVICES=1 python train.py --id $ID --caption_model topdown \
     --input_json data/msvd_dataset/msvd.json \
     --input_fc_dir data/msvd_dataset/msvd_fc --input_att_dir data/msvd_dataset/msvd_att \
     --input_label_h5 data/msvd_dataset/msvd_label.h5 --input_attribute_json data/msvd_dataset/attribute_word2idx.json\
