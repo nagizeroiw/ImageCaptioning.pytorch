@@ -167,7 +167,7 @@ def eval_split(model, crit, loader, eval_kwargs={}):
                     print('video %s: %s' % (entry['image_id'], entry['caption']))
                     print('   gt: %s' % ' '.join(([loader.ix_to_word[str(p)] for p in gt_label if p > 0])))
                     print('   attr: %s' % (' '.join([loader.attr_idx2word[id] for id in attr_indices])))
-                    print('   gt labels: %s' % (' '.join([loader.attr_idx2word[id] for id in gt_attr_indices])))
+                    print('   gt attr: %s' % (' '.join([loader.attr_idx2word[id] for id in gt_attr_indices])))
 
         # if we wrapped around the split or used up val imgs budget then bail
         ix0 = data['bounds']['it_pos_now']
